@@ -1,17 +1,22 @@
 package com.huy.airbnbserver.user;
 
+
+import com.huy.airbnbserver.system.AuthorizeToken;
 import com.huy.airbnbserver.system.Result;
 import com.huy.airbnbserver.system.StatusCode;
 import com.huy.airbnbserver.user.converter.UserDtoToUserConverter;
 import com.huy.airbnbserver.user.converter.UserToUserDtoConverter;
 import com.huy.airbnbserver.user.dto.UserDto;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -34,7 +39,12 @@ public class UserController {
     }
 
     @GetMapping("/{userId}")
-    public Result findUserById(@PathVariable Integer userId) {
+    public Result findUserById(@PathVariable Integer userId,
+                               @AuthenticationPrincipal Jwt jwt) {
+        if (!AuthorizeToken.isUserIdMatch(jwt, userId)) {
+            return new Result(false,  StatusCode.UNAUTHORIZED, "Action Not Allow For This User");
+        }
+
         var user = userService.findById(userId);
         var userDto = userToUserDtoConverter.convert(user);
         return new Result(true, StatusCode.SUCCESS, "Success", userDto);
@@ -48,7 +58,14 @@ public class UserController {
     }
 
     @PutMapping("/{userId}")
-    public Result updateUser(@PathVariable Integer userId, @Valid @RequestBody UserDto userDto) {
+    public Result updateUser(@PathVariable Integer userId,
+                             @Valid @RequestBody UserDto userDto,
+                             @AuthenticationPrincipal Jwt jwt
+    ) {
+        if (!AuthorizeToken.isUserIdMatch(jwt, userId)) {
+            return new Result(false,  StatusCode.UNAUTHORIZED, "Action Not Allow For This User");
+        }
+
         User update = this.userDtoToUserConverter.convert(userDto);
         assert update != null;
         User updatedUser = this.userService.update(userId, update);
@@ -57,8 +74,25 @@ public class UserController {
     }
 
     @DeleteMapping("/{userId}")
-    public Result deleteUser(@PathVariable Integer userId) {
+    public Result deleteUser(@PathVariable Integer userId,
+                             @AuthenticationPrincipal Jwt jwt) {
+        if (!AuthorizeToken.isUserIdMatch(jwt, userId)) {
+            return new Result(false,  StatusCode.UNAUTHORIZED, "Action Not Allow For This User");
+        }
+
         this.userService.delete(userId);
         return new Result(true, StatusCode.SUCCESS, "Delete Success");
+    }
+
+    @PutMapping(path = "/{userId}/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Result assignAvatar(@PathVariable Integer userId,
+                               @NotNull @RequestParam("images") List<MultipartFile> files,
+                               @AuthenticationPrincipal Jwt jwt) throws IOException {
+        if (!AuthorizeToken.isUserIdMatch(jwt, userId)) {
+            return new Result(false,  StatusCode.UNAUTHORIZED, "Action Not Allow For This User");
+        }
+
+        userService.assignAvatar(userId, files);
+        return new Result(true, 200, "Avatar upload success!");
     }
 }

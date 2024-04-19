@@ -58,11 +58,10 @@ public class SecurityConfiguration {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .authorizeHttpRequests(c->c
-                        .requestMatchers(HttpMethod.GET, "/api/v1/users/**").hasAuthority("ROLE_admin")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/users").hasAuthority("ROLE_admin")
                         .requestMatchers(HttpMethod.POST, "/api/v1/users/**").permitAll() // login and register
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/users/**").hasAuthority("ROLE_admin")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/users/**").hasAuthority("ROLE_admin")
                         .requestMatchers(AntPathRequestMatcher.antMatcher("/h2-console/**")).permitAll()
+                        .requestMatchers(HttpMethod.GET,"/api/v1/images/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .headers(headers -> headers.frameOptions().disable())
@@ -106,6 +105,7 @@ public class SecurityConfiguration {
 
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
+        jwtAuthenticationConverter.setPrincipalClaimName("userId");
         return jwtAuthenticationConverter;
     }
 }

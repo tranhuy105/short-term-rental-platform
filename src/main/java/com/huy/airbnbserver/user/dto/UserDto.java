@@ -1,5 +1,7 @@
 package com.huy.airbnbserver.user.dto;
 
+import com.huy.airbnbserver.image.Image;
+import com.huy.airbnbserver.image.ImageDto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -14,6 +16,7 @@ public record UserDto(
     @Email(message = "invalid email")
     String email,
     Date createdAt,
-    Date updatedAt
+    Date updatedAt,
+    ImageDto avatar
 ) {
 }

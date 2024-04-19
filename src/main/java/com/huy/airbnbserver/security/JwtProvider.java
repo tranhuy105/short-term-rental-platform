@@ -1,5 +1,6 @@
 package com.huy.airbnbserver.security;
 
+import com.huy.airbnbserver.user.UserPrincipal;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -28,6 +29,7 @@ public class JwtProvider {
                 .expiresAt(now.plus(expiredIn, ChronoUnit.HOURS))
                 .subject(authentication.getName())
                 .claim("authorities", authorities)
+                .claim("userId", ((UserPrincipal) authentication.getPrincipal()).getUser().getId())
                 .build();
         return this.jwtEncoder.encode(JwtEncoderParameters.from(claim)).getTokenValue();
     }

@@ -1,5 +1,6 @@
 package com.huy.airbnbserver.system;
 
+import com.huy.airbnbserver.image.Image;
 import com.huy.airbnbserver.user.User;
 import com.huy.airbnbserver.user.UserService;
 import lombok.AllArgsConstructor;
@@ -20,10 +21,12 @@ public class DBInit implements CommandLineRunner {
         user.setPassword("123");
 
 
+
         var user2 = new User();
         user2.setUsername("john");
         user2.setEmail("user@test.com");
         user2.setPassword("123");
+
 
         userService.save(user);
         userService.save(user2);

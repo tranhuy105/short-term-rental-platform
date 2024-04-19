@@ -1,5 +1,6 @@
 package com.huy.airbnbserver.user;
 
+import lombok.ToString;
 import org.apache.catalina.util.StringUtil;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -9,6 +10,7 @@ import org.springframework.util.StringUtils;
 import java.util.Arrays;
 import java.util.Collection;
 
+@ToString
 public class UserPrincipal implements UserDetails {
 
     private User user;
