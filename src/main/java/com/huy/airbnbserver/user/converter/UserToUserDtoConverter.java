@@ -13,8 +13,6 @@ public class UserToUserDtoConverter implements Converter<User, UserDto> {
                 source.getId(),
                 source.getUsername(),
                 source.getEmail(),
-                source.isEnabled(),
-                source.getRoles(),
                 source.getCreatedAt(),
                 source.getUpdatedAt()
         );

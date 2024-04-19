@@ -12,8 +12,6 @@ public class UserDtoToUserConverter implements Converter<UserDto, User> {
         User newUser = new User();
         newUser.setUsername(source.username());
         newUser.setEmail(source.email());
-        newUser.setRoles(source.roles());
-        newUser.setEnabled(source.enabled());
 
         return newUser;
     }

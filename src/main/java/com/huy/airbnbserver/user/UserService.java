@@ -33,6 +33,8 @@ public class UserService implements UserDetailsService {
         if (userCheck.isPresent()) {
             throw new UserAlreadyExistException();
         }
+        user.setRoles("user");
+        user.setEnabled(true);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }

@@ -13,10 +13,6 @@ public record UserDto(
     @NotEmpty(message = "email is required")
     @Email(message = "invalid email")
     String email,
-    @NotNull
-    boolean enabled,
-    @NotEmpty(message = "roles is required")
-    String roles,
     Date createdAt,
     Date updatedAt
 ) {

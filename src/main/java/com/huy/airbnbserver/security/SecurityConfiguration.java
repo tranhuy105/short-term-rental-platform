@@ -59,7 +59,7 @@ public class SecurityConfiguration {
         return http
                 .authorizeHttpRequests(c->c
                         .requestMatchers(HttpMethod.GET, "/api/v1/users/**").hasAuthority("ROLE_admin")
-                        .requestMatchers(HttpMethod.POST, "/api/v1/users").hasAuthority("ROLE_admin")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/users/**").permitAll() // login and register
                         .requestMatchers(HttpMethod.PUT, "/api/v1/users/**").hasAuthority("ROLE_admin")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/users/**").hasAuthority("ROLE_admin")
                         .requestMatchers(AntPathRequestMatcher.antMatcher("/h2-console/**")).permitAll()
