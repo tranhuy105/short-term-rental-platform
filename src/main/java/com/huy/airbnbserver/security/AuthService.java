@@ -24,7 +24,8 @@ public class AuthService {
         userDto.put("username", user.getUsername());
         userDto.put("email", user.getEmail());
         userDto.put("role", user.getRoles());
-        userDto.put("image_url", "http://random/image");
+        var imageUrl = user.getAvatar() != null ? "/api/v1/images/"+user.getAvatar().getName() : null;
+        userDto.put("image_url", imageUrl);
 
         // create jwt
         String token = jwtProvider.createToken(authentication);

@@ -1,5 +1,6 @@
 package com.huy.airbnbserver.user;
 
+import com.huy.airbnbserver.image.ImageService;
 import com.huy.airbnbserver.system.exception.ObjectNotFoundException;
 import com.huy.airbnbserver.system.exception.UserAlreadyExistException;
 import jakarta.transaction.Transactional;
@@ -8,7 +9,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @Service
@@ -16,6 +19,7 @@ import java.util.List;
 @AllArgsConstructor
 public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
+    private final ImageService imageService;
     private final PasswordEncoder passwordEncoder;
 
     public List<User> findAll() {
@@ -33,7 +37,7 @@ public class UserService implements UserDetailsService {
         if (userCheck.isPresent()) {
             throw new UserAlreadyExistException();
         }
-        user.setRoles("user");
+//        user.setRoles("user");
         user.setEnabled(true);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
@@ -58,5 +62,17 @@ public class UserService implements UserDetailsService {
         return userRepository.findByEmail(email)
                 .map(UserPrincipal::new)
                 .orElseThrow(() -> new UsernameNotFoundException("email: " + email + " not found"));
+    }
+
+    @Transactional
+    public void assignAvatar(Integer id, List<MultipartFile> files) throws IOException {
+        var user = userRepository.findById(id).orElseThrow(()->new ObjectNotFoundException("user", id));
+        // remove current image
+        if (user.getAvatar() != null) {
+            imageService.deleteById(user.getAvatar().getId());
+        }
+        var images = imageService.upload(files);
+        user.setAvatar(images.get(0));
+        userRepository.save(user);
     }
 }

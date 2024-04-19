@@ -1,11 +1,10 @@
 package com.huy.airbnbserver.user;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.huy.airbnbserver.image.Image;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -17,6 +16,7 @@ import java.util.Date;
 @AllArgsConstructor
 @Getter
 @Setter
+@ToString
 @Table(name = "USER_ACCOUNT", indexes = {
         @Index(name = "email_index", columnList = "email")
 })
@@ -53,4 +53,9 @@ public class User implements Serializable {
 
     @Column(updatable = false, nullable = false, length = 100)
     private String roles = "user";
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JsonManagedReference
+    @JoinColumn(name = "avatar_id", referencedColumnName = "id", nullable = true)
+    private Image avatar;
 }

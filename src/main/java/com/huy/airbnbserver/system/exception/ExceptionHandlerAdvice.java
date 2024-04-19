@@ -83,6 +83,6 @@ public class ExceptionHandlerAdvice {
     @ExceptionHandler(AccessDeniedException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     Result handleAccessDeniedException(AccessDeniedException ex) {
-        return new Result(false, StatusCode.UNAUTHORIZED, "No permission, only user with admin can access this route.", ex.getMessage());
+        return new Result(false, StatusCode.FORBIDDEN, "Permission Denied.", ex.getMessage());
     }
 }
