@@ -1,7 +1,9 @@
 package com.huy.airbnbserver.user;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.huy.airbnbserver.image.Image;
+import com.huy.airbnbserver.properties.Property;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.*;
@@ -9,7 +11,9 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @NoArgsConstructor
@@ -58,4 +62,17 @@ public class User implements Serializable {
     @JsonManagedReference
     @JoinColumn(name = "avatar_id", referencedColumnName = "id", nullable = true)
     private Image avatar;
+
+    @OneToMany(mappedBy = "host", cascade = CascadeType.ALL)
+    @JsonBackReference
+    private List<Property> hostedProperties = new ArrayList<>();
+
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH})
+    @JoinTable(
+            name = "liked_property",
+            joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "property_id"),
+            uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "property_id"})
+    )
+    List<Property> likedProperty = new ArrayList<>();
 }

@@ -1,16 +1,27 @@
 package com.huy.airbnbserver.system;
 
 import com.huy.airbnbserver.image.Image;
+import com.huy.airbnbserver.image.ImageRepository;
+import com.huy.airbnbserver.image.ImageService;
+import com.huy.airbnbserver.properties.Property;
+import com.huy.airbnbserver.properties.PropertyService;
 import com.huy.airbnbserver.user.User;
 import com.huy.airbnbserver.user.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 @Component
 @AllArgsConstructor
 public class DBInit implements CommandLineRunner {
     private final UserService userService;
+    private final PropertyService propertyService;
+    private final ImageRepository imageRepository;
 
     @Override
     public void run(String... args) throws Exception {
@@ -20,15 +31,31 @@ public class DBInit implements CommandLineRunner {
         user.setEmail("admin@test.com");
         user.setPassword("123");
 
-
-
         var user2 = new User();
         user2.setUsername("john");
         user2.setEmail("user@test.com");
         user2.setPassword("123");
 
+        var property = Property.builder()
+                .nightlyPrice(BigDecimal.valueOf(99.99))
+                .name("Khach San Ho Tay")
+                .maxGuests(4)
+                .numBathrooms(2)
+                .numBedrooms(2)
+                .numBeds(3)
+                .longitude(BigDecimal.valueOf(12.43))
+                .latitude(BigDecimal.valueOf(43.3))
+                .description("A super beautiful hotel with the view of West Lake")
+                .addressLine("27 West Lake")
+                .images(new ArrayList<>())
+                .host(user)
+                .build();
+
+        property.addImages(new Image());
+        property.addImages(new Image());
 
         userService.save(user);
         userService.save(user2);
+//        propertyService.saveTest(property);
     }
 }

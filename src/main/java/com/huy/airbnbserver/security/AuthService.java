@@ -24,7 +24,7 @@ public class AuthService {
         userDto.put("username", user.getUsername());
         userDto.put("email", user.getEmail());
         userDto.put("role", user.getRoles());
-        var imageUrl = user.getAvatar() != null ? "/api/v1/images/"+user.getAvatar().getName() : null;
+        var imageUrl = user.getAvatar() != null ? "/api/v1/images/"+user.getAvatar().getId() : null;
         userDto.put("image_url", imageUrl);
 
         // create jwt

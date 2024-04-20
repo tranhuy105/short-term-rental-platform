@@ -1,7 +1,7 @@
 package com.huy.airbnbserver.user;
 
 
-import com.huy.airbnbserver.system.AuthorizeToken;
+import com.huy.airbnbserver.system.Utils;
 import com.huy.airbnbserver.system.Result;
 import com.huy.airbnbserver.system.StatusCode;
 import com.huy.airbnbserver.user.converter.UserDtoToUserConverter;
@@ -41,7 +41,7 @@ public class UserController {
     @GetMapping("/{userId}")
     public Result findUserById(@PathVariable Integer userId,
                                @AuthenticationPrincipal Jwt jwt) {
-        if (!AuthorizeToken.isUserIdMatch(jwt, userId)) {
+        if (Utils.userIdNotMatch(jwt, userId)) {
             return new Result(false,  StatusCode.UNAUTHORIZED, "Action Not Allow For This User");
         }
 
@@ -62,7 +62,7 @@ public class UserController {
                              @Valid @RequestBody UserDto userDto,
                              @AuthenticationPrincipal Jwt jwt
     ) {
-        if (!AuthorizeToken.isUserIdMatch(jwt, userId)) {
+        if (Utils.userIdNotMatch(jwt, userId)) {
             return new Result(false,  StatusCode.UNAUTHORIZED, "Action Not Allow For This User");
         }
 
@@ -76,7 +76,7 @@ public class UserController {
     @DeleteMapping("/{userId}")
     public Result deleteUser(@PathVariable Integer userId,
                              @AuthenticationPrincipal Jwt jwt) {
-        if (!AuthorizeToken.isUserIdMatch(jwt, userId)) {
+        if (Utils.userIdNotMatch(jwt, userId)) {
             return new Result(false,  StatusCode.UNAUTHORIZED, "Action Not Allow For This User");
         }
 
@@ -88,7 +88,7 @@ public class UserController {
     public Result assignAvatar(@PathVariable Integer userId,
                                @NotNull @RequestParam("images") List<MultipartFile> files,
                                @AuthenticationPrincipal Jwt jwt) throws IOException {
-        if (!AuthorizeToken.isUserIdMatch(jwt, userId)) {
+        if (Utils.userIdNotMatch(jwt, userId)) {
             return new Result(false,  StatusCode.UNAUTHORIZED, "Action Not Allow For This User");
         }
 
