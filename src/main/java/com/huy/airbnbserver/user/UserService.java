@@ -2,7 +2,7 @@ package com.huy.airbnbserver.user;
 
 import com.huy.airbnbserver.image.ImageService;
 import com.huy.airbnbserver.system.exception.ObjectNotFoundException;
-import com.huy.airbnbserver.system.exception.UserAlreadyExistException;
+import com.huy.airbnbserver.system.exception.EntityAlreadyExistException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -35,7 +35,7 @@ public class UserService implements UserDetailsService {
     public User save(User user){
         var userCheck = userRepository.findByEmail(user.getEmail());
         if (userCheck.isPresent()) {
-            throw new UserAlreadyExistException();
+            throw new EntityAlreadyExistException("user");
         }
 //        user.setRoles("user");
         user.setEnabled(true);

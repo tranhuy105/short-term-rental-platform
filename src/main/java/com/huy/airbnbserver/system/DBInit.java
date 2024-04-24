@@ -21,7 +21,6 @@ import java.util.List;
 public class DBInit implements CommandLineRunner {
     private final UserService userService;
     private final PropertyService propertyService;
-    private final ImageRepository imageRepository;
 
     @Override
     public void run(String... args) throws Exception {
@@ -48,14 +47,13 @@ public class DBInit implements CommandLineRunner {
                 .description("A super beautiful hotel with the view of West Lake")
                 .addressLine("27 West Lake")
                 .images(new ArrayList<>())
+                .likedByUsers(new ArrayList<>())
+                .bookings(new ArrayList<>())
                 .host(user)
                 .build();
 
-        property.addImages(new Image());
-        property.addImages(new Image());
-
         userService.save(user);
         userService.save(user2);
-//        propertyService.saveTest(property);
+        propertyService.save(property, user.getId(), new ArrayList<>());
     }
 }

@@ -1,6 +1,8 @@
 package com.huy.airbnbserver.properties;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.huy.airbnbserver.booking.Booking;
 import com.huy.airbnbserver.image.Image;
 import com.huy.airbnbserver.user.User;
 import jakarta.persistence.*;
@@ -92,7 +94,10 @@ public class Property implements Serializable{
     private User host;
 
     @ManyToMany(mappedBy = "likedProperty", fetch = FetchType.LAZY)
-    List<User> likedByUsers = new ArrayList<>();
+    private List<User> likedByUsers = new ArrayList<>();
+
+    @OneToMany(mappedBy = "property", fetch = FetchType.LAZY, cascade = CascadeType.ALL) @JsonBackReference
+    private List<Booking> bookings = new ArrayList<>();
 
     public void addImages(Image image) {
         image.setProperty(this);

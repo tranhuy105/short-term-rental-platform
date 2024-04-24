@@ -26,4 +26,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
                 "JOIN p.likedByUsers u " +
                 "WHERE u.id = :userId")
     List<Property> getLikedByUserId(Integer userId);
+
+    @Query(value = "SELECT * FROM liked_property l WHERE l.user_id = :userId AND l.property_id = :propertyId", nativeQuery = true)
+    List<Object> getLikedDetailsOfUserIdAndPropertyId(Integer userId, Long propertyId);
 }

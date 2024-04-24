@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @AllArgsConstructor
-@RequestMapping("/api/v1/users")
+@RequestMapping("/api/v1/auth")
 public class AuthController {
     private final AuthService authService;
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthController.class);

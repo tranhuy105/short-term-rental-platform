@@ -2,6 +2,7 @@ package com.huy.airbnbserver.system.exception;
 
 import com.huy.airbnbserver.system.Result;
 import com.huy.airbnbserver.system.StatusCode;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -56,7 +57,7 @@ public class ExceptionHandlerAdvice {
         return new Result(false, StatusCode.INVALID_ARGUMENT, "Request Body is required");
     }
 
-    @ExceptionHandler(UserAlreadyExistException.class)
+    @ExceptionHandler(EntityAlreadyExistException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     Result handleUserAlreadyExistException(Exception ex) {
         return new Result(false, StatusCode.INVALID_ARGUMENT, "Can not insert new user", ex.getMessage());
@@ -84,5 +85,16 @@ public class ExceptionHandlerAdvice {
     @ResponseStatus(HttpStatus.FORBIDDEN)
     Result handleAccessDeniedException(AccessDeniedException ex) {
         return new Result(false, StatusCode.FORBIDDEN, "Permission Denied.", ex.getMessage());
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    Result handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
+        return new Result(
+                false,
+                StatusCode.INVALID_ARGUMENT,
+                "SQL Constraint failed, if this is a many-to-many record operation, maybe the record has already exists",
+                null
+        );
     }
 }

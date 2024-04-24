@@ -2,6 +2,7 @@ package com.huy.airbnbserver.properties;
 
 import com.huy.airbnbserver.image.Image;
 import com.huy.airbnbserver.image.ImageUtils;
+import com.huy.airbnbserver.system.exception.EntityAlreadyExistException;
 import com.huy.airbnbserver.system.exception.ObjectNotFoundException;
 import com.huy.airbnbserver.user.User;
 import com.huy.airbnbserver.user.UserRepository;
@@ -65,6 +66,10 @@ public class PropertyService {
         var property = propertyRepository.findById(id).orElseThrow(() -> new ObjectNotFoundException("property", id));
         var user = userRepository.findById(userId).orElseThrow(() -> new ObjectNotFoundException("user", id));
 
+        if (!propertyRepository.getLikedDetailsOfUserIdAndPropertyId(userId, id).isEmpty()) {
+            throw new EntityAlreadyExistException("Liked Entity Associated with this userId and propertyId already exists");
+        }
+
         property.addLikedUser(user);
         propertyRepository.save(property);
     }
@@ -72,6 +77,10 @@ public class PropertyService {
     public void unlike(Long id, Integer userId) {
         Property property = propertyRepository.findById(id).orElseThrow(() -> new ObjectNotFoundException("property", id));
         var user = userRepository.findById(userId).orElseThrow(() -> new ObjectNotFoundException("user", id));
+
+        if (propertyRepository.getLikedDetailsOfUserIdAndPropertyId(userId, id).isEmpty()) {
+            throw new ObjectNotFoundException("liked entity", "userId: "+userId + " propertyId: "+id);
+        }
 
         property.removeLikedUser(user);
         propertyRepository.save(property);
