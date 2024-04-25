@@ -24,36 +24,25 @@ public class DBInit implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        var user = new User();
-        user.setRoles("admin user");
-        user.setUsername("tranhuy");
-        user.setEmail("admin@test.com");
-        user.setPassword("123");
 
-        var user2 = new User();
-        user2.setUsername("john");
-        user2.setEmail("user@test.com");
-        user2.setPassword("123");
 
-        var property = Property.builder()
-                .nightlyPrice(BigDecimal.valueOf(99.99))
-                .name("Khach San Ho Tay")
-                .maxGuests(4)
-                .numBathrooms(2)
-                .numBedrooms(2)
-                .numBeds(3)
-                .longitude(BigDecimal.valueOf(12.43))
-                .latitude(BigDecimal.valueOf(43.3))
-                .description("A super beautiful hotel with the view of West Lake")
-                .addressLine("27 West Lake")
-                .images(new ArrayList<>())
-                .likedByUsers(new ArrayList<>())
-                .bookings(new ArrayList<>())
-                .host(user)
-                .build();
+//        var property = Property.builder()
+//                .nightlyPrice(BigDecimal.valueOf(99.99))
+//                .name("Khach San Ho Tay")
+//                .maxGuests(4)
+//                .numBathrooms(2)
+//                .numBedrooms(2)
+//                .numBeds(3)
+//                .longitude(BigDecimal.valueOf(12.43))
+//                .latitude(BigDecimal.valueOf(43.3))
+//                .description("A super beautiful hotel with the view of West Lake")
+//                .addressLine("27 West Lake")
+//                .images(new ArrayList<>())
+//                .likedByUsers(new ArrayList<>())
+//                .bookings(new ArrayList<>())
+//                .host(user)
+//                .build();
 
-        userService.save(user);
-        userService.save(user2);
-        propertyService.save(property, user.getId(), new ArrayList<>());
+
     }
 }

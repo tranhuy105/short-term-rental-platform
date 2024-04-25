@@ -17,7 +17,7 @@ import java.util.List;
 @Service
 @Transactional
 @AllArgsConstructor
-public class UserService implements UserDetailsService {
+public class UserService {
     private final UserRepository userRepository;
     private final ImageService imageService;
     private final PasswordEncoder passwordEncoder;
@@ -45,7 +45,8 @@ public class UserService implements UserDetailsService {
 
     public User update(Integer userId, User update){
         var oldUser = userRepository.findById(userId).orElseThrow(()->new ObjectNotFoundException("user", userId));
-        oldUser.setUsername(update.getUsername());
+        oldUser.setFirstname(update.getFirstname());
+        oldUser.setLastname(update.getLastname());
         oldUser.setEmail(update.getEmail());
 
         return userRepository.save(oldUser);
@@ -57,12 +58,7 @@ public class UserService implements UserDetailsService {
         userRepository.deleteById(id);
     }
 
-    @Override
-    public UserPrincipal loadUserByUsername(String email) throws UsernameNotFoundException {
-        return userRepository.findByEmail(email)
-                .map(UserPrincipal::new)
-                .orElseThrow(() -> new UsernameNotFoundException("email: " + email + " not found"));
-    }
+
 
     @Transactional
     public void assignAvatar(Integer id, List<MultipartFile> files) throws IOException {

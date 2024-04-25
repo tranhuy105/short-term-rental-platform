@@ -17,7 +17,7 @@ import java.io.Serializable;
 @Builder
 @EqualsAndHashCode
 @Table(indexes = {@Index(name = "imgName_index", columnList = "name")})
-public class Image implements Serializable {
+public class Image {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

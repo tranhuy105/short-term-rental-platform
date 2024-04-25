@@ -10,7 +10,8 @@ public class UserDtoToUserConverter implements Converter<UserDto, User> {
     @Override
     public User convert(UserDto source) {
         User newUser = new User();
-        newUser.setUsername(source.username());
+        newUser.setFirstname(source.firstname());
+        newUser.setLastname(source.lastname());
         newUser.setEmail(source.email());
 
         return newUser;

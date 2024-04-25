@@ -5,11 +5,11 @@ import com.huy.airbnbserver.booking.converter.BookingToBookingDtoConverter;
 import com.huy.airbnbserver.booking.dto.BookingDto;
 import com.huy.airbnbserver.system.Result;
 import com.huy.airbnbserver.system.StatusCode;
+import com.huy.airbnbserver.system.Utils;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Objects;
@@ -24,13 +24,13 @@ public class BookingController {
 
     @PostMapping("/{propertyId}")
     public Result newBooking(
-            @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody BookingDto bookingDto,
-            @Valid @NotNull @PathVariable Long propertyId
+            @Valid @NotNull @PathVariable Long propertyId,
+            Authentication authentication
             ) {
         var savedBooking = bookingService.save(
                 Objects.requireNonNull(bookingDtoToBookingConverter.convert(bookingDto)),
-                Integer.valueOf(jwt.getClaimAsString("userId")),
+                Utils.extractAuthenticationId(authentication),
                 propertyId
         );
         return new Result(
@@ -42,10 +42,9 @@ public class BookingController {
     }
 
     @GetMapping
-    public Result getAllBookingsByUser(
-            @AuthenticationPrincipal Jwt jwt
-    ) {
-        var bookingList = bookingService.getAllBookingByUserId(Integer.valueOf(jwt.getClaimAsString("userId")));
+    public Result getAllBookingsByUser(Authentication authentication) {
+        Integer userId = Utils.extractAuthenticationId(authentication);
+        var bookingList = bookingService.getAllBookingByUserId(userId);
         var bookingDtoList = bookingList
                 .stream()
                 .map(bookingToBookingDtoConverter::convert)
@@ -53,7 +52,7 @@ public class BookingController {
         return new Result(
                 true,
                 StatusCode.SUCCESS,
-                "Fetch all booking for user with id: " + jwt.getClaimAsString("userId"),
+                "Fetch all booking for user with id: " + userId,
                 bookingDtoList
         );
     }
@@ -62,10 +61,10 @@ public class BookingController {
     public Result getAllBookingsForPropertyHost(
             @Valid @NotNull
             @PathVariable Long propertyId,
-            @AuthenticationPrincipal Jwt jwt
+            Authentication authentication
     ) {
         var bookingList = bookingService
-                .getAllBookingByPropertyId(propertyId, Integer.valueOf(jwt.getClaimAsString("userId")));
+                .getAllBookingByPropertyId(propertyId, Utils.extractAuthenticationId(authentication));
         var bookingDtoList = bookingList
                 .stream()
                 .map(bookingToBookingDtoConverter::convert)
@@ -81,18 +80,18 @@ public class BookingController {
     @DeleteMapping("/{id}")
     public Result deleteBooking(
             @Valid @NotNull @PathVariable Long id,
-            @AuthenticationPrincipal Jwt jwt
+            Authentication authentication
     ) {
-        bookingService.delete(id, Integer.valueOf(jwt.getClaimAsString("userId")));
+        bookingService.delete(id, Utils.extractAuthenticationId(authentication));
         return new Result(true, StatusCode.SUCCESS, "Delete booking success");
     }
 
     @PutMapping("/{id}")
     public Result confirmBooking(
             @Valid @NotNull @PathVariable Long id,
-            @AuthenticationPrincipal Jwt jwt
+            Authentication authentication
     ) {
-        bookingService.confirm(id, Integer.valueOf(jwt.getClaimAsString("userId")));
+        bookingService.confirm(id, Utils.extractAuthenticationId(authentication));
         return new Result(true, StatusCode.SUCCESS, "Confirm booking success");
     }
 }

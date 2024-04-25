@@ -6,10 +6,11 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -60,10 +61,10 @@ public class ExceptionHandlerAdvice {
     @ExceptionHandler(EntityAlreadyExistException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     Result handleUserAlreadyExistException(Exception ex) {
-        return new Result(false, StatusCode.INVALID_ARGUMENT, "Can not insert new user", ex.getMessage());
+        return new Result(false, StatusCode.INVALID_ARGUMENT, "Can not insert new entity", ex.getMessage());
     }
 
-        @ExceptionHandler({UsernameNotFoundException.class, BadCredentialsException.class, })
+    @ExceptionHandler({UsernameNotFoundException.class, BadCredentialsException.class, })
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     Result handleAuthenticationException(Exception ex) {
         return new Result(false, StatusCode.UNAUTHORIZED, "username or password is incorrect", ex.getMessage());
@@ -72,13 +73,13 @@ public class ExceptionHandlerAdvice {
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     Result handleOtherException(Exception ex) {
-        return new Result(false, StatusCode.INTERNAL_SERVER_ERROR, "A server internal error occurs.", ex.getMessage());
+        return new Result(false, StatusCode.INTERNAL_SERVER_ERROR, "Internal Server Error.", ex.getMessage());
     }
 
-    @ExceptionHandler(InvalidBearerTokenException.class)
+    @ExceptionHandler(InsufficientAuthenticationException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    Result handleInvalidBearerTokenException(InvalidBearerTokenException ex) {
-        return new Result(false, StatusCode.UNAUTHORIZED, "The access token provided is not valid.", ex.getMessage());
+    Result handleInsufficientAuthenticationException(Exception ex) {
+        return new Result(false, StatusCode.UNAUTHORIZED, "InsufficientAuthenticationException", ex.getMessage());
     }
 
     @ExceptionHandler(AccessDeniedException.class)
@@ -94,6 +95,17 @@ public class ExceptionHandlerAdvice {
                 false,
                 StatusCode.INVALID_ARGUMENT,
                 "SQL Constraint failed, if this is a many-to-many record operation, maybe the record has already exists",
+                null
+        );
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
+    Result handleMethodNotAllow(Exception ex) {
+        return new Result(
+                false,
+                405,
+                "This method is not allowed for this routes",
                 null
         );
     }

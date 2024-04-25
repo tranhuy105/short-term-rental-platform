@@ -1,15 +1,21 @@
 package com.huy.airbnbserver.system;
 
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.web.bind.annotation.RequestParam;
+
+import com.huy.airbnbserver.user.UserPrincipal;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 public class Utils {
-    public static boolean userIdNotMatch(Jwt jwt, Integer userIdFromRequestParam) {
-            String userIdFromToken = jwt.getClaimAsString("userId");
-            return userIdFromToken == null || !userIdFromToken.equals(String.valueOf(userIdFromRequestParam));
+
+    public static Integer extractAuthenticationId(Authentication authentication) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            return ((UserPrincipal)authentication.getPrincipal()).getUser().getId();
+        } else {
+            throw new AccessDeniedException("Unauthenticated User");
+        }
     }
 
     public static boolean imageValidationFailed(List<MultipartFile> images) {

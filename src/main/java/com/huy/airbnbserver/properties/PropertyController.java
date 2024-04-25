@@ -11,8 +11,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -28,7 +27,7 @@ public class PropertyController {
     private final PropertyDtoToPropertyConverter propertyDtoToPropertyConverter;
 
     @GetMapping("/{propertyId}")
-    public Result findById(@Min(0) @NotNull @PathVariable Long propertyId) {
+    public Result findById(@NotNull @PathVariable Long propertyId) {
         return new Result(
                 true,
                 StatusCode.SUCCESS,
@@ -38,17 +37,17 @@ public class PropertyController {
     }
 
     @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_JSON_VALUE})
-    public Result save(@AuthenticationPrincipal Jwt jwt,
-                       @RequestParam("images") List<MultipartFile> images,
-                       @RequestPart PropertyDto propertyDto) throws IOException {
+    public Result save(@RequestParam("images") List<MultipartFile> images,
+                       @RequestPart PropertyDto propertyDto,
+                       Authentication authentication) throws IOException {
         if (Utils.imageValidationFailed(images)) {
             return new Result(false, StatusCode.INVALID_ARGUMENT, "Invalid image files were provided", null);
         };
 
-        Integer userId = Integer.valueOf(jwt.getClaimAsString("userId"));
+
         Property property = propertyDtoToPropertyConverter.convert(propertyDto);
         assert property != null;
-        var savedProperty = propertyService.save(property, userId, images);
+        var savedProperty = propertyService.save(property, Utils.extractAuthenticationId(authentication), images);
 
         return new Result(true,
                 StatusCode.CREATED,
@@ -57,9 +56,8 @@ public class PropertyController {
     }
 
     @DeleteMapping("/{id}")
-    public Result delete(@Valid @PathVariable Long id,
-                         @AuthenticationPrincipal Jwt jwt) {
-        propertyService.delete(id, Integer.valueOf(jwt.getClaimAsString("userId")));
+    public Result delete(@Valid @PathVariable Long id, Authentication authentication) {
+        propertyService.delete(id, Utils.extractAuthenticationId(authentication));
         return new Result(true, StatusCode.SUCCESS, "delete successful");
     }
 
@@ -68,23 +66,21 @@ public class PropertyController {
     // like service
 
     @PutMapping("/like/{id}")
-    public Result likeProperty(@Valid @PathVariable Long id,
-                               @AuthenticationPrincipal Jwt jwt) {
-        propertyService.like(id, Integer.valueOf(jwt.getClaimAsString("userId")));
+    public Result likeProperty(@Valid @PathVariable Long id, Authentication authentication) {
+        propertyService.like(id, Utils.extractAuthenticationId(authentication));
         return new Result(true, 200, "Success");
     }
 
     @DeleteMapping("/like/{id}")
-    public Result deleteLike(@Valid @PathVariable Long id,
-                               @AuthenticationPrincipal Jwt jwt) {
-        propertyService.unlike(id, Integer.valueOf(jwt.getClaimAsString("userId")));
+    public Result deleteLike(@Valid @PathVariable Long id, Authentication authentication) {
+        propertyService.unlike(id, Utils.extractAuthenticationId(authentication));
         return new Result(true, 200, "Success");
     }
 
     @GetMapping("/like")
-    public Result getLikedPropertiesByUser(@AuthenticationPrincipal Jwt jwt) {
+    public Result getLikedPropertiesByUser(Authentication authentication) {
         var propertyList =  propertyService
-                .getAllLikedPropertiedByUserWithUserId(Integer.valueOf(jwt.getClaimAsString("userId")));
+                .getAllLikedPropertiedByUserWithUserId(Utils.extractAuthenticationId(authentication));
 
         List<PropertyDto> propertyDtos = propertyList
                 .stream()

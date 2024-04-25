@@ -25,15 +25,19 @@ import java.util.List;
 @Table(name = "USER_ACCOUNT", indexes = {
         @Index(name = "email_index", columnList = "email")
 })
-public class User implements Serializable {
+public class User {
     @Id
     @Column(nullable = false, updatable = false)
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @Column(nullable = false, length = 200)
-    @NotEmpty(message = "username is required")
-    private String username;
+    @NotEmpty(message = "firstname is required")
+    private String firstname;
+
+    @Column(nullable = false, length = 200)
+    @NotEmpty(message = "lastname is required")
+    private String lastname;
 
     @Column(nullable = false, unique = true, length = 200)
     @NotEmpty(message = "email is required")
@@ -53,11 +57,15 @@ public class User implements Serializable {
     @UpdateTimestamp
     private Date updatedAt;
 
-    @Column(updatable = false, nullable = false)
-    private boolean enabled = true;
+    @Column(nullable = false)
+    private boolean enabled;
 
     @Column(updatable = false, nullable = false, length = 100)
     private String roles = "user";
+
+
+
+
 
     @OneToOne(cascade = CascadeType.ALL)
     @JsonManagedReference
@@ -71,7 +79,7 @@ public class User implements Serializable {
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL) @JsonBackReference
     private List<Booking> bookings = new ArrayList<>();
 
-    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH})
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH}, fetch = FetchType.LAZY)
     @JoinTable(
             name = "liked_property",
             joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
@@ -79,4 +87,9 @@ public class User implements Serializable {
             uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "property_id"})
     )
     List<Property> likedProperty = new ArrayList<>();
+
+
+    public String getFullname() {
+        return firstname + " " + lastname;
+    }
 }
