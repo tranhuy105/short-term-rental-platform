@@ -26,7 +26,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @EqualsAndHashCode
-public class Property implements Serializable{
+public class Property{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(nullable = false, updatable = false)

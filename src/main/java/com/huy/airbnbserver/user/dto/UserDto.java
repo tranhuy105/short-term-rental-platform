@@ -10,8 +10,10 @@ import java.util.Date;
 
 public record UserDto(
     Integer id,
-    @NotEmpty(message = "username is required")
-    String username,
+    @NotEmpty(message = "firstname is required")
+    String firstname,
+    @NotEmpty(message = "lastname is required")
+    String lastname,
     @NotEmpty(message = "email is required")
     @Email(message = "invalid email")
     String email,

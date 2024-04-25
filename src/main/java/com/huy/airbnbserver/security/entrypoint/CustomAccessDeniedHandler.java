@@ -1,4 +1,4 @@
-package com.huy.airbnbserver.security;
+package com.huy.airbnbserver.security.entrypoint;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

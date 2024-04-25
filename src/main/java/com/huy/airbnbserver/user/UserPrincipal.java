@@ -7,11 +7,12 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.StringUtils;
 
+import java.security.Principal;
 import java.util.Arrays;
 import java.util.Collection;
 
 @ToString
-public class UserPrincipal implements UserDetails {
+public class UserPrincipal implements UserDetails, Principal {
 
     private User user;
 
@@ -58,5 +59,10 @@ public class UserPrincipal implements UserDetails {
 
     public User getUser() {
         return this.user;
+    }
+
+    @Override
+    public String getName() {
+        return user.getEmail();
     }
 }

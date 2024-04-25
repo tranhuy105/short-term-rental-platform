@@ -1,0 +1,13 @@
+spring:
+  devtools:
+    livereload:
+      enabled: false
+    restart:
+      enabled: false
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+
+  profiles:
+    active: dev
