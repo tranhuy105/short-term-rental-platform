@@ -6,9 +6,11 @@ import com.huy.airbnbserver.booking.dto.BookingDto;
 import com.huy.airbnbserver.system.Result;
 import com.huy.airbnbserver.system.StatusCode;
 import com.huy.airbnbserver.system.Utils;
+import com.huy.airbnbserver.system.exception.InvalidDateArgumentException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,34 +18,41 @@ import java.util.Objects;
 
 @RestController
 @AllArgsConstructor
-@RequestMapping("/api/v1/bookings")
+@RequestMapping("/api/v1")
 public class BookingController {
     private final BookingService bookingService;
     private final BookingDtoToBookingConverter bookingDtoToBookingConverter;
     private final BookingToBookingDtoConverter bookingToBookingDtoConverter;
 
-    @PostMapping("/{propertyId}")
+    @PostMapping("/properties/{propertyId}/bookings")
     public Result newBooking(
             @Valid @RequestBody BookingDto bookingDto,
-            @Valid @NotNull @PathVariable Long propertyId,
+            @PathVariable Long propertyId,
             Authentication authentication
             ) {
-        var savedBooking = bookingService.save(
-                Objects.requireNonNull(bookingDtoToBookingConverter.convert(bookingDto)),
-                Utils.extractAuthenticationId(authentication),
-                propertyId
-        );
+        bookingService.isDateValidCheck(bookingDto, propertyId);
+
+//        var savedBooking = bookingService.save(
+//                Objects.requireNonNull(bookingDtoToBookingConverter.convert(bookingDto)),
+//                Utils.extractAuthenticationId(authentication),
+//                propertyId
+//        );
         return new Result(
                 true,
                 StatusCode.SUCCESS,
-                "new booking pending...",
-                bookingToBookingDtoConverter.convert(savedBooking)
+                "new booking pending..."
+//                bookingToBookingDtoConverter.convert(savedBooking)
         );
     }
 
-    @GetMapping
-    public Result getAllBookingsByUser(Authentication authentication) {
-        Integer userId = Utils.extractAuthenticationId(authentication);
+    @GetMapping("/users/{userId}/bookings")
+    public Result getAllBookingsByUser(Authentication authentication, @PathVariable Integer userId) {
+        Integer authId = Utils.extractAuthenticationId(authentication);
+
+        if (!authId.equals(userId)) {
+            throw new AccessDeniedException("Access denied for this user");
+        }
+
         var bookingList = bookingService.getAllBookingByUserId(userId);
         var bookingDtoList = bookingList
                 .stream()
@@ -57,9 +66,8 @@ public class BookingController {
         );
     }
 
-    @GetMapping("/{propertyId}")
+    @GetMapping("/properties/{propertyId}/bookings")
     public Result getAllBookingsForPropertyHost(
-            @Valid @NotNull
             @PathVariable Long propertyId,
             Authentication authentication
     ) {
@@ -77,18 +85,18 @@ public class BookingController {
         );
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/bookings/{id}")
     public Result deleteBooking(
-            @Valid @NotNull @PathVariable Long id,
+            @PathVariable Long id,
             Authentication authentication
     ) {
         bookingService.delete(id, Utils.extractAuthenticationId(authentication));
         return new Result(true, StatusCode.SUCCESS, "Delete booking success");
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/bookings/{id}")
     public Result confirmBooking(
-            @Valid @NotNull @PathVariable Long id,
+            @PathVariable Long id,
             Authentication authentication
     ) {
         bookingService.confirm(id, Utils.extractAuthenticationId(authentication));

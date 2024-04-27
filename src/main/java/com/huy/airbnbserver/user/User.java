@@ -3,6 +3,7 @@ package com.huy.airbnbserver.user;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.huy.airbnbserver.booking.Booking;
+import com.huy.airbnbserver.comment.Comment;
 import com.huy.airbnbserver.image.Image;
 import com.huy.airbnbserver.properties.Property;
 import jakarta.persistence.*;
@@ -67,12 +68,12 @@ public class User {
 
 
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
     @JoinColumn(name = "avatar_id", referencedColumnName = "id", nullable = true)
     private Image avatar;
 
-    @OneToMany(mappedBy = "host", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "host", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonBackReference
     private List<Property> hostedProperties = new ArrayList<>();
 

@@ -19,6 +19,7 @@ public class UserToUserDtoConverter implements Converter<User, UserDto> {
                 source.getFirstname(),
                 source.getLastname(),
                 source.getEmail(),
+                source.isEnabled(),
                 source.getCreatedAt(),
                 source.getUpdatedAt(),
                 source.getAvatar() != null

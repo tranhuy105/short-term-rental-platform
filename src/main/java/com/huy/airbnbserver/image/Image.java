@@ -27,11 +27,7 @@ public class Image {
     @Column(columnDefinition = "MEDIUMBLOB")
     private byte[] imageData;
 
-    @OneToOne(mappedBy = "avatar")
-    @JsonBackReference
-    private User user;
-
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "property_id", nullable = true)
     @JsonBackReference
     private Property property;

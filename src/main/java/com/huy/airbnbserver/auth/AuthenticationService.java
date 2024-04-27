@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.parameters.P;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -40,9 +41,10 @@ public class AuthenticationService {
 
     @Transactional
     public void registerUser(RegistrationRequest request) throws MessagingException {
-        userRepository.findByEmail(request.getEmail()).orElseThrow(
-                () -> new EntityAlreadyExistException("user")
-        );
+        var userExist = userRepository.findByEmail(request.getEmail());
+        if (userExist.isPresent()) {
+            throw new EntityAlreadyExistException("user");
+        }
 
         var user = new User();
         user.setFirstname(request.getFirstname());

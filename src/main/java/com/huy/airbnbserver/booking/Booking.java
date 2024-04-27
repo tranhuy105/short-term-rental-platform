@@ -6,7 +6,9 @@ import com.huy.airbnbserver.user.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.hibernate.annotations.Check;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.io.Serializable;
@@ -19,7 +21,7 @@ import java.util.Date;
 @EqualsAndHashCode
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(uniqueConstraints = {@UniqueConstraint(columnNames = {"user_id", "property_id"})})
+@Check(constraints = "check_in_date < check_out_date")
 public class Booking{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,11 +31,13 @@ public class Booking{
     @Column(nullable = false, updatable = false)
     @Temporal(TemporalType.DATE)
     @Future
+    @NotNull
     private Date checkInDate;
 
     @Column(nullable = false, updatable = false)
     @Temporal(TemporalType.DATE)
     @Future
+    @NotNull
     private Date checkOutDate;
 
     // confirm, pending, ...

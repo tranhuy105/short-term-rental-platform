@@ -17,6 +17,7 @@ public record UserDto(
     @NotEmpty(message = "email is required")
     @Email(message = "invalid email")
     String email,
+    boolean enabled,
     Date createdAt,
     Date updatedAt,
     ImageDto avatar

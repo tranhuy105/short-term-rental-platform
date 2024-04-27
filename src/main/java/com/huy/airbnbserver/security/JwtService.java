@@ -9,6 +9,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import javax.crypto.spec.SecretKeySpec;
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
@@ -71,8 +72,8 @@ public class JwtService {
     }
 
     private Key getSignInKey() {
-        byte[] keyBites = Decoders.BASE64.decode(secretKey);
-        return Keys.hmacShaKeyFor(keyBites);
+        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        return new SecretKeySpec(keyBytes, "HmacSHA256");
     }
 
     public boolean isTokenValid(String token, UserDetails userDetails) {

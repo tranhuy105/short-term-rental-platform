@@ -4,6 +4,7 @@ package com.huy.airbnbserver.user;
 import com.huy.airbnbserver.system.Result;
 import com.huy.airbnbserver.system.StatusCode;
 import com.huy.airbnbserver.system.Utils;
+import com.huy.airbnbserver.user.converter.UserDtoToUserConverter;
 import com.huy.airbnbserver.user.converter.UserToUserDtoConverter;
 import com.huy.airbnbserver.user.dto.UserDto;
 import jakarta.validation.constraints.NotNull;
@@ -25,18 +26,6 @@ import java.util.List;
 public class UserController {
     private final UserService userService;
     private final UserToUserDtoConverter userToUserDtoConverter;
-//    private final UserDtoToUserConverter userDtoToUserConverter;
-
-    @GetMapping("/test")
-    public ResponseEntity<String> test(Authentication authentication) {
-        if (authentication != null && authentication.isAuthenticated()) {
-            String email = authentication.getName();
-            System.out.println(((UserPrincipal)authentication.getPrincipal()).getUser().getId());
-            return ResponseEntity.ok("Authenticated user: " + email);
-        } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User is not authenticated");
-        }
-    }
 
     @GetMapping
     public Result findAllUsers() {
@@ -56,20 +45,22 @@ public class UserController {
         return new Result(true, StatusCode.SUCCESS, "Success", userDto);
     }
 
-//    @PutMapping("/{userId}")
-//    public Result updateUser(@PathVariable Integer userId,
-//                             @Valid @RequestBody UserDto userDto
-//    ) {
-//        if (Utils.userIdNotMatch(jwt, userId)) {
-//            return new Result(false,  StatusCode.UNAUTHORIZED, "Action Not Allow For This User");
-//        }
-//
-//        User update = this.userDtoToUserConverter.convert(userDto);
-//        assert update != null;
-//        User updatedUser = this.userService.update(userId, update);
-//        UserDto updatedUserDto = this.userToUserDtoConverter.convert(updatedUser);
-//        return new Result(true, StatusCode.SUCCESS, "Update Success", updatedUserDto);
-//    }
+    @PutMapping("/{userId}")
+    public Result updateUser(@PathVariable Integer userId,
+                             Authentication authentication,
+                             @RequestBody UserDto userDto) {
+        if (!userId.equals(Utils.extractAuthenticationId(authentication))) {
+            return new Result(false,  StatusCode.UNAUTHORIZED, "Action Not Allow For This User");
+        }
+
+
+        return new Result(
+                true,
+                StatusCode.SUCCESS,
+                "Updated Success",
+                userToUserDtoConverter.convert(userService.update(userId, userDto))
+        );
+    }
 
     @DeleteMapping("/{userId}")
     public Result deleteUser(@PathVariable Integer userId,
@@ -78,7 +69,7 @@ public class UserController {
             return new Result(false,  StatusCode.UNAUTHORIZED, "Action Not Allow For This User");
         }
 
-        this.userService.delete(userId);
+        userService.delete(userId);
         return new Result(true, StatusCode.SUCCESS, "Delete Success");
     }
 

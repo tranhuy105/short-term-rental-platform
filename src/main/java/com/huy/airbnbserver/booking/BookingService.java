@@ -1,14 +1,18 @@
 package com.huy.airbnbserver.booking;
 
+import com.huy.airbnbserver.booking.dto.BookingDto;
 import com.huy.airbnbserver.properties.PropertyRepository;
+import com.huy.airbnbserver.system.Utils;
+import com.huy.airbnbserver.system.exception.InvalidDateArgumentException;
 import com.huy.airbnbserver.system.exception.ObjectNotFoundException;
-import com.huy.airbnbserver.system.exception.EntityAlreadyExistException;
 import com.huy.airbnbserver.user.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -18,13 +22,10 @@ public class BookingService {
     private final PropertyRepository propertyRepository;
     private final BookingRepository bookingRepository;
 
-    @Transactional(readOnly = true)
+    @Transactional
     public Booking save(Booking booking, Integer userId, Long propertyId) {
         var user = userRepository.findById(userId).orElseThrow(()->new ObjectNotFoundException("user", userId));
         var property = propertyRepository.findById(propertyId).orElseThrow(()->new ObjectNotFoundException("property", propertyId));
-        if (!bookingRepository.findByUserIdAndPropertyId(userId, propertyId).isEmpty()) {
-            throw new EntityAlreadyExistException("booking entity with this userId and propertyId");
-        }
 
         booking.addUser(user);
         booking.addProperty(property);
@@ -74,5 +75,42 @@ public class BookingService {
 
         confirmBooking.setConfirm(true);
         bookingRepository.save(confirmBooking);
+    }
+
+    public void isDateValidCheck(BookingDto bookingDto, Long propertyId) {
+        if(isSameDay(bookingDto.check_in_date(), bookingDto.check_out_date())) {
+            throw new InvalidDateArgumentException();
+        }
+
+        if (bookingDto.check_in_date().after(bookingDto.check_out_date())) {
+            throw new InvalidDateArgumentException();
+        }
+
+        List<Date> queryDate = bookingRepository.findAllBookingDateOfProperty(propertyId);
+        List<Date> fillDate = Utils.fillDateRanges(queryDate);
+
+        for (Date date : fillDate) {
+            System.out.println(date);
+        }
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(bookingDto.check_in_date());
+        while (!calendar.getTime().after(bookingDto.check_out_date())) {
+            Date currentDate = calendar.getTime();
+            if (fillDate.stream().anyMatch(date -> isSameDay(currentDate, date))) {
+                throw new InvalidDateArgumentException();
+            }
+            calendar.add(Calendar.DATE, 1);
+        }
+    }
+
+    private boolean isSameDay(Date date1, Date date2) {
+        Calendar cal1 = Calendar.getInstance();
+        cal1.setTime(date1);
+        Calendar cal2 = Calendar.getInstance();
+        cal2.setTime(date2);
+        return cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
+                cal1.get(Calendar.MONTH) == cal2.get(Calendar.MONTH) &&
+                cal1.get(Calendar.DAY_OF_MONTH) == cal2.get(Calendar.DAY_OF_MONTH);
     }
 }

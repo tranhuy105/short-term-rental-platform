@@ -1,116 +1,140 @@
-package com.huy.airbnbserver.properties;
+    package com.huy.airbnbserver.properties;
+    
+    import com.fasterxml.jackson.annotation.JsonBackReference;
+    import com.fasterxml.jackson.annotation.JsonManagedReference;
+    import com.huy.airbnbserver.booking.Booking;
+    import com.huy.airbnbserver.comment.Comment;
+    import com.huy.airbnbserver.image.Image;
+    import com.huy.airbnbserver.properties.category.Category;
+    import com.huy.airbnbserver.properties.category.Tag;
+    import com.huy.airbnbserver.user.User;
+    import jakarta.persistence.*;
+    import jakarta.validation.constraints.Max;
+    import jakarta.validation.constraints.Min;
+    import jakarta.validation.constraints.NotEmpty;
+    import jakarta.validation.constraints.NotNull;
+    import lombok.*;
+    import org.hibernate.annotations.CreationTimestamp;
+    import org.hibernate.annotations.UpdateTimestamp;
+    
+    import java.io.Serializable;
+    import java.math.BigDecimal;
+    import java.util.*;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.huy.airbnbserver.booking.Booking;
-import com.huy.airbnbserver.image.Image;
-import com.huy.airbnbserver.user.User;
-import jakarta.persistence.*;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+    @Entity
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    @EqualsAndHashCode
+    @ToString
+    public class Property{
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        @Column(nullable = false, updatable = false)
+        private Long id;
+    
+        @Column(nullable = false)
+        @NotNull @Min(10)
+        private BigDecimal nightlyPrice;
+    
+        @Column(nullable = false, length = 200)
+        @NotEmpty
+        private String name;
+    
+        @Column(nullable = false)
+        @NotNull @Min(0)
+        private Integer maxGuests;
+    
+        @Column(nullable = false)
+        @NotNull @Min(0)
+        private Integer numBeds;
+    
+        @Column(nullable = false)
+        @NotNull @Min(0)
+        private Integer numBedrooms;
+    
+        @Column(nullable = false)
+        @NotNull @Min(0)
+        private Integer numBathrooms;
+    
+        @Column(nullable = false, precision = 10, scale = 2)
+        @NotNull
+        private BigDecimal longitude;
+    
+        @Column(nullable = false, precision = 10, scale = 2)
+        @NotNull
+        private BigDecimal latitude;
+    
+        @Column(nullable = false, length = 2000)
+        @NotEmpty
+        private String description;
+    
+        @Column(nullable = false, length = 500)
+        @NotEmpty
+        private String addressLine;
+    
+        @Column(nullable = false, updatable = false)
+        @Temporal(TemporalType.TIMESTAMP)
+        @CreationTimestamp
+        private Date createdAt;
+    
+        // can be null
+        @Temporal(TemporalType.TIMESTAMP)
+        @UpdateTimestamp
+        private Date updatedAt;
+    
+        // relationship
+    
+        @OneToMany(mappedBy = "property", cascade = CascadeType.ALL)
+        @JsonManagedReference
+        private List<Image> images = new ArrayList<>();
+    
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "host_id", nullable = false)
+        @JsonManagedReference
+        private User host;
+    
+        @ManyToMany(mappedBy = "likedProperty", fetch = FetchType.LAZY)
+        private List<User> likedByUsers = new ArrayList<>();
+    
+        @OneToMany(mappedBy = "property", fetch = FetchType.LAZY, cascade = CascadeType.ALL) @JsonBackReference
+        private List<Booking> bookings = new ArrayList<>();
+    
+        @OneToMany(mappedBy = "property", fetch = FetchType.LAZY, cascade = CascadeType.ALL) @JsonManagedReference
+        private List<Comment> comments = new ArrayList<>();
+    
+        public void addImages(Image image) {
+            image.setProperty(this);
+            this.images.add(image);
+        }
+    
+        public void addLikedUser(User user) {
+            user.getLikedProperty().add(this);
+            this.likedByUsers.add(user);
+        }
+    
+        public void removeLikedUser(User user) {
+            user.getLikedProperty().remove(this);
+            this.likedByUsers.remove(user);
+        }
 
-import java.io.Serializable;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+        @ElementCollection(targetClass = Category.class)
+        @CollectionTable(name = "property_categories", joinColumns = @JoinColumn(name = "property_id"))
+        @Column(nullable = false)
+        @Enumerated(EnumType.STRING)
+        private Set<Category> categories = new HashSet<>();
 
-@Entity
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-@EqualsAndHashCode
-public class Property{
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(nullable = false, updatable = false)
-    private Long id;
+        @Enumerated(EnumType.STRING)
+        @Column(nullable = false)
+        private Tag tag;
 
-    @Column(nullable = false)
-    @NotNull @Min(0)
-    private BigDecimal nightlyPrice;
+        public void addCategory(Category category) {
+            this.categories.add(category);
+        }
 
-    @Column(nullable = false, length = 200)
-    @NotEmpty
-    private String name;
-
-    @Column(nullable = false)
-    @NotNull @Min(0)
-    private Integer maxGuests;
-
-    @Column(nullable = false)
-    @NotNull @Min(0)
-    private Integer numBeds;
-
-    @Column(nullable = false)
-    @NotNull @Min(0)
-    private Integer numBedrooms;
-
-    @Column(nullable = false)
-    @NotNull @Min(0)
-    private Integer numBathrooms;
-
-    @Column(nullable = false, precision = 10, scale = 2)
-    @NotNull
-    private BigDecimal longitude;
-
-    @Column(nullable = false, precision = 10, scale = 2)
-    @NotNull
-    private BigDecimal latitude;
-
-    @Column(nullable = false, length = 2000)
-    @NotEmpty
-    private String description;
-
-    @Column(nullable = false, length = 500)
-    @NotEmpty
-    private String addressLine;
-
-    @Column(nullable = false, updatable = false)
-    @Temporal(TemporalType.TIMESTAMP)
-    @CreationTimestamp
-    private Date createdAt;
-
-    // can be null
-    @Temporal(TemporalType.TIMESTAMP)
-    @UpdateTimestamp
-    private Date updatedAt;
-
-    // relationship
-
-    @OneToMany(mappedBy = "property", cascade = CascadeType.ALL)
-    @JsonManagedReference
-    private List<Image> images = new ArrayList<>();
-
-    @ManyToOne
-    @JoinColumn(name = "host_id", nullable = false)
-    @JsonManagedReference
-    private User host;
-
-    @ManyToMany(mappedBy = "likedProperty", fetch = FetchType.LAZY)
-    private List<User> likedByUsers = new ArrayList<>();
-
-    @OneToMany(mappedBy = "property", fetch = FetchType.LAZY, cascade = CascadeType.ALL) @JsonBackReference
-    private List<Booking> bookings = new ArrayList<>();
-
-    public void addImages(Image image) {
-        image.setProperty(this);
-        this.images.add(image);
+        public void removeCategory(Category category) {
+            this.categories.remove(category);
+        }
     }
-
-    public void addLikedUser(User user) {
-        user.getLikedProperty().add(this);
-        this.likedByUsers.add(user);
-    }
-
-    public void removeLikedUser(User user) {
-        user.getLikedProperty().remove(this);
-        this.likedByUsers.remove(user);
-    }
-}

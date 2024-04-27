@@ -7,6 +7,7 @@ import com.huy.airbnbserver.security.filter.JwtFilter;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -39,6 +40,8 @@ public class SecurityConfiguration {
                                 .accessDeniedHandler(customAccessDeniedHandler)
                 )
                 .authorizeHttpRequests(req -> req
+                        .requestMatchers(HttpMethod.GET, "/api/v1/properties/**")
+                        .permitAll()
                         .requestMatchers(
                                 "/api/v1/auth/**",
                                 "/api/v1/images/**"

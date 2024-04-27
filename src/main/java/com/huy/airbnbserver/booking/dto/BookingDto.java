@@ -9,11 +9,10 @@ import java.util.Date;
 
 public record BookingDto(
         Long id,
-
         @Future @NotNull
-        Date checkin_date,
+        Date check_in_date,
         @Future @NotNull
-        Date checkout_date,
+        Date check_out_date,
         @Min(0) @NotNull
         Integer num_alduts,
         @Min(0) @NotNull
@@ -34,4 +33,5 @@ public record BookingDto(
         Date created_at,
         boolean is_confirm
 ) {
+
 }

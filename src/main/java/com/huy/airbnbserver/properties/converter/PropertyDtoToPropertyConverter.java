@@ -1,14 +1,19 @@
 package com.huy.airbnbserver.properties.converter;
 
 import com.huy.airbnbserver.properties.Property;
-import com.huy.airbnbserver.properties.dto.PropertyDto;
+import com.huy.airbnbserver.properties.category.Category;
+import com.huy.airbnbserver.properties.category.Tag;
+import com.huy.airbnbserver.properties.dto.PropertyDetailDto;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+
 @Component
-public class PropertyDtoToPropertyConverter implements Converter<PropertyDto, Property> {
+public class PropertyDtoToPropertyConverter implements Converter<PropertyDetailDto, Property> {
     @Override
-    public Property convert(PropertyDto source) {
+    public Property convert(PropertyDetailDto source) {
         var p = new Property();
         p.setNightlyPrice(source.nightly_price());
         p.setName(source.name());
@@ -20,6 +25,11 @@ public class PropertyDtoToPropertyConverter implements Converter<PropertyDto, Pr
         p.setLatitude(source.latitude());
         p.setDescription(source.description());
         p.setAddressLine(source.address_line());
+        Set<Category> categories = source.categories().stream()
+                .map(Category::valueOf)
+                .collect(Collectors.toSet());
+        p.setCategories(categories);
+        p.setTag(Tag.valueOf(source.tag()));
         return p;
     }
 }

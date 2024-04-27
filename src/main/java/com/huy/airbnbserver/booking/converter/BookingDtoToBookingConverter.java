@@ -10,8 +10,8 @@ public class BookingDtoToBookingConverter implements Converter<BookingDto, Booki
     @Override
     public Booking convert(BookingDto source) {
         var booking = new Booking();
-        booking.setCheckInDate(source.checkin_date());
-        booking.setCheckOutDate(source.checkout_date());
+        booking.setCheckInDate(source.check_in_date());
+        booking.setCheckOutDate(source.check_out_date());
         booking.setNumAlduts(source.num_alduts());
         booking.setNumChildrens(source.num_childrens());
         booking.setNumPets(source.num_pets());

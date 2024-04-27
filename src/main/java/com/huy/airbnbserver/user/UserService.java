@@ -2,12 +2,9 @@ package com.huy.airbnbserver.user;
 
 import com.huy.airbnbserver.image.ImageService;
 import com.huy.airbnbserver.system.exception.ObjectNotFoundException;
-import com.huy.airbnbserver.system.exception.EntityAlreadyExistException;
+import com.huy.airbnbserver.user.dto.UserDto;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,7 +17,6 @@ import java.util.List;
 public class UserService {
     private final UserRepository userRepository;
     private final ImageService imageService;
-    private final PasswordEncoder passwordEncoder;
 
     public List<User> findAll() {
         return userRepository.findAll();
@@ -28,26 +24,15 @@ public class UserService {
 
     public User findById(Integer id) {
         return userRepository
-                .findById(id)
+                .findByIdEager(id)
                 .orElseThrow(()->new ObjectNotFoundException("user", id));
     }
 
-    public User save(User user){
-        var userCheck = userRepository.findByEmail(user.getEmail());
-        if (userCheck.isPresent()) {
-            throw new EntityAlreadyExistException("user");
-        }
-//        user.setRoles("user");
-        user.setEnabled(true);
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        return userRepository.save(user);
-    }
-
-    public User update(Integer userId, User update){
+    public User update(Integer userId, UserDto update){
         var oldUser = userRepository.findById(userId).orElseThrow(()->new ObjectNotFoundException("user", userId));
-        oldUser.setFirstname(update.getFirstname());
-        oldUser.setLastname(update.getLastname());
-        oldUser.setEmail(update.getEmail());
+        oldUser.setFirstname(update.firstname());
+        oldUser.setLastname(update.lastname());
+        oldUser.setEmail(update.email());
 
         return userRepository.save(oldUser);
     }

@@ -2,6 +2,11 @@ package com.huy.airbnbserver.system.exception;
 
 import com.huy.airbnbserver.system.Result;
 import com.huy.airbnbserver.system.StatusCode;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.SignatureException;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -15,8 +20,10 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +35,12 @@ public class ExceptionHandlerAdvice {
     @ExceptionHandler(ObjectNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     Result handleObjectNotFoundException(ObjectNotFoundException ex) {
+        return new Result(false, StatusCode.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    Result handleNoResourceFoundException(Exception ex) {
         return new Result(false, StatusCode.NOT_FOUND, ex.getMessage());
     }
 
@@ -46,16 +59,22 @@ public class ExceptionHandlerAdvice {
         return new Result(false, StatusCode.INVALID_ARGUMENT, "Provided arguments are invalid, see data for details.", map);
     }
 
+    @ExceptionHandler(InvalidSearchQueryException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    Result handleInvalidSearchQueryException(InvalidSearchQueryException exception) {
+        return new Result(false, StatusCode.INVALID_ARGUMENT, "Invalid Search Query Parameter", exception.getMessage());
+    }
+
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     Result handleMethodArgumentTypeMismatchException( MethodArgumentTypeMismatchException ex) {
-        return new Result(false, StatusCode.INVALID_ARGUMENT, "Invalid Path Variable, Please Double Check Your Request");
+        return new Result(false, StatusCode.INVALID_ARGUMENT, "Invalid Variable, Please Double Check Your Request", ex.getMessage());
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     Result handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
-        return new Result(false, StatusCode.INVALID_ARGUMENT, "Request Body is required");
+        return new Result(false, StatusCode.INVALID_ARGUMENT, "Bad Request", ex.getMessage());
     }
 
     @ExceptionHandler(EntityAlreadyExistException.class)
@@ -73,6 +92,7 @@ public class ExceptionHandlerAdvice {
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     Result handleOtherException(Exception ex) {
+        ex.printStackTrace();
         return new Result(false, StatusCode.INTERNAL_SERVER_ERROR, "Internal Server Error.", ex.getMessage());
     }
 
@@ -94,8 +114,7 @@ public class ExceptionHandlerAdvice {
         return new Result(
                 false,
                 StatusCode.INVALID_ARGUMENT,
-                "SQL Constraint failed, if this is a many-to-many record operation, maybe the record has already exists",
-                null
+                "SQL Constraint failed, if this is a many-to-many record operation, maybe the record has already exists"
         );
     }
 
@@ -105,8 +124,33 @@ public class ExceptionHandlerAdvice {
         return new Result(
                 false,
                 405,
-                "This method is not allowed for this routes",
-                null
+                "This method is not allowed for this routes"
+        );
+    }
+
+    @ExceptionHandler(ExpiredJwtException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public Result handleExpiredJwtException(ExpiredJwtException ex) {
+        return new Result(false, 403, "JWT token has expired. Please log in again.", ex.getMessage());
+    }
+
+    @ExceptionHandler(JwtException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public Result handleBadTokenException(JwtException ex) {
+        return new Result(
+                false,
+                403,
+                "Malformed Or Invalid Token."
+        );
+    }
+
+    @ExceptionHandler(InvalidDateArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Result handleInvalidDateException(Exception ex) {
+        return new Result(
+                false,
+                400,
+                ex.getMessage()
         );
     }
 }
