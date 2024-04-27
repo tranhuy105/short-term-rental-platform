@@ -1,8 +1,8 @@
 package com.huy.airbnbserver.properties;
 
-import com.huy.airbnbserver.properties.category.Area;
-import com.huy.airbnbserver.properties.category.Category;
-import com.huy.airbnbserver.properties.category.Tag;
+import com.huy.airbnbserver.properties.enm.Area;
+import com.huy.airbnbserver.properties.enm.Category;
+import com.huy.airbnbserver.properties.enm.Tag;
 import com.huy.airbnbserver.properties.dto.ReviewInfoProjection;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,22 +16,12 @@ import java.util.Optional;
 
 
 public interface PropertyRepository extends JpaRepository<Property, Long> {
-
-//    @Query(value =
-//            "SELECT DISTINCT p.* " +
-//            "FROM Property p " +
-//            "JOIN user_account h ON p.host_id = h.id " +
-//            "LEFT JOIN image i ON p.id = i.property_id " +
-//            "WHERE p.id = :id",
-//            nativeQuery = true)
-//    @Nonnull
-//    Optional<Property> findById(@Nonnull Long id);
-
-    @Query(value =
-                "SELECT p " +
-                "FROM Property p " +
-                "JOIN p.likedByUsers u " +
-                "WHERE u.id = :userId")
+    @Query(value = """
+            SELECT p 
+            FROM Property p
+            LEFT JOIN FETCH p.images 
+            JOIN p.likedByUsers u 
+            WHERE u.id = :userId""")
     List<Property> getLikedByUserId(Integer userId);
 
     @Query(value = "SELECT * " +
@@ -41,11 +31,12 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
     List<Object> getLikedDetailsOfUserIdAndPropertyId(Integer userId, Long propertyId);
 
     @NonNull
-    @Query(value = "SELECT DISTINCT p FROM Property p " +
-            "LEFT JOIN FETCH p.images " +
-            "LEFT JOIN FETCH p.host h " +
-            "LEFT JOIN FETCH h.avatar " +
-            "WHERE p.id = :id ")
+    @Query(value = """
+                SELECT DISTINCT p FROM Property p
+                LEFT JOIN FETCH p.images
+                LEFT JOIN FETCH p.host h 
+                LEFT JOIN FETCH h.avatar
+                WHERE p.id = :id """)
     Optional<Property> findDetailById(@NonNull Long id);
 
     @Query(value = """
@@ -79,10 +70,13 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
                                  @NonNull Pageable pageable
                                  );
 
-    @Query(value = "SELECT AVG(c.rating) AS averageRating, COUNT(*) AS totalRating " +
-            "FROM comment c " +
-            "WHERE c.property_id = :propertyId " +
-            "GROUP BY c.property_id", nativeQuery = true)
+    @Query(value = """
+            SELECT 
+                AVG(c.rating) AS averageRating, 
+                COUNT(*) AS totalRating
+            FROM comment c
+            WHERE c.property_id = :propertyId
+            GROUP BY c.property_id""", nativeQuery = true)
     ReviewInfoProjection findAverageRatingForProperty(@Param("propertyId") Long propertyId);
 
 
@@ -117,7 +111,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
         AND (:minBathrooms IS NULL OR p.num_bathrooms >= :minBathrooms)
         AND (:minBedrooms IS NULL OR p.num_bedrooms >= :minBedrooms)
         GROUP BY p.id
-        ORDER BY p.updated_at DESC
+        ORDER BY updatedAt DESC
         LIMIT :limit OFFSET :offset
         """, nativeQuery = true)
     List<Object[]> findAllNative(@Nullable String category1,
@@ -135,4 +129,42 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
                                  @Nullable Integer minBedrooms,
                                  @NonNull Long limit,
                                  @NonNull Long offset);
+
+    @Query(value = """
+        SELECT 
+            p.id,
+            p.nightly_price,
+            p.name,
+            p.max_guests,
+            p.num_beds,
+            p.num_bedrooms,
+            p.num_bathrooms,
+            p.longitude,
+            p.latitude,
+            p.description,
+            p.address_line,
+            p.created_at,
+            p.updated_at,
+            h.firstname AS host_firstname,
+            h.lastname AS host_lastname,
+            a.id AS avatar_id,
+            a.name AS avatar_name,
+            GROUP_CONCAT(DISTINCT i.id) AS imageIds,
+            GROUP_CONCAT(DISTINCT i.name) AS imageNames,
+            GROUP_CONCAT(DISTINCT c.categories) AS categories,
+            p.tag,
+            h.id AS host_id,
+            h.email AS host_email,
+            h.enabled AS host_enaled,
+            h.created_at AS host_created_at,
+            h.updated_at AS host_updated_at
+        FROM property p
+        LEFT JOIN image i ON p.id = i.property_id
+        LEFT JOIN user_account h ON h.id = p.host_id
+        LEFT JOIN image a ON h.avatar_id = a.id
+        LEFT JOIN property_categories c ON p.id = c.property_id
+        WHERE p.id = :id
+        GROUP BY p.id""", nativeQuery = true)
+    List<Object[]> findDetailByIdNative(@Param("id") Long id);
+
 }

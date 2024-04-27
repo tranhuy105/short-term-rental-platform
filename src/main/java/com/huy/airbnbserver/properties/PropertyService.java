@@ -3,9 +3,7 @@ package com.huy.airbnbserver.properties;
 import com.huy.airbnbserver.image.Image;
 import com.huy.airbnbserver.image.ImageDto;
 import com.huy.airbnbserver.image.ImageUtils;
-import com.huy.airbnbserver.properties.category.Area;
-import com.huy.airbnbserver.properties.category.Category;
-import com.huy.airbnbserver.properties.category.Tag;
+import com.huy.airbnbserver.properties.enm.*;
 import com.huy.airbnbserver.properties.dto.PropertyOverviewProjection;
 import com.huy.airbnbserver.system.exception.EntityAlreadyExistException;
 import com.huy.airbnbserver.system.exception.ObjectNotFoundException;
@@ -13,8 +11,6 @@ import com.huy.airbnbserver.user.User;
 import com.huy.airbnbserver.user.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -31,9 +28,12 @@ public class PropertyService {
     private final UserRepository userRepository;
 
     public Property findById(Long id) {
-        return propertyRepository.findDetailById(id).orElseThrow(
-                () -> new ObjectNotFoundException("property", id)
-        );
+        List<Object[]> res = propertyRepository.findDetailByIdNative(id);
+        if (res.isEmpty()) {
+            throw new ObjectNotFoundException("property", id);
+        }
+
+        return mapToProperty(res.get(0));
     }
 
     public Property save(Property property, Integer userId, List<MultipartFile> images) throws IOException {
@@ -188,15 +188,21 @@ public class PropertyService {
 
             @Override
             public List<ImageDto> getImages() {
-                String[] imageIds = ((String) result[8]).split(",");
-                String[] imageNames = ((String) result[9]).split(",");
+                String[] imageIds;
+                String[] imageNames;
+                if (result[8] != null && result[9] != null) {
+                    imageIds = ((String) result[8]).split(",");
+                    imageNames = ((String) result[9]).split(",");
+                } else {
+                    imageIds = new String[0];
+                    imageNames = new String[0];
+                }
                 List<ImageDto> images = new ArrayList<>();
                 for (int i = 0; i < imageIds.length; i++) {
                     var id = Long.parseLong(imageIds[i]);
 
                     ImageDto image = new ImageDto(
                             imageNames[i],
-                            id,
                             "/api/v1/images/"+id
 
                     );
@@ -212,4 +218,70 @@ public class PropertyService {
             }
         };
     }
+
+    private Property mapToProperty(Object[] result) {
+        Property property = new Property();
+        property.setId((Long) result[0]);
+        property.setNightlyPrice((BigDecimal) result[1]);
+        property.setName((String) result[2]);
+        property.setMaxGuests((Integer) result[3]);
+        property.setNumBeds((Integer) result[4]);
+        property.setNumBedrooms((Integer) result[5]);
+        property.setNumBathrooms((Integer) result[6]);
+        property.setLongitude((BigDecimal) result[7]);
+        property.setLatitude((BigDecimal) result[8]);
+        property.setDescription((String) result[9]);
+        property.setAddressLine((String) result[10]);
+        property.setCreatedAt((Date) result[11]);
+        property.setUpdatedAt((Date) result[12]);
+
+        User host = new User();
+        host.setFirstname((String) result[13]);
+        host.setLastname((String) result[14]);
+        host.setId((Integer) result[21]);
+        host.setEmail((String) result[22]);
+        host.setEnabled((boolean) result[23]);
+        host.setCreatedAt((Date) result[24]);
+        host.setUpdatedAt((Date) result[25]);
+        Image avatar = new Image();
+        avatar.setId((Long) result[15]);
+        avatar.setName((String) result[16]);
+        host.setAvatar(avatar);
+        property.setHost(host);
+
+        String[] imageIds;
+        String[] imageNames;
+        if (result[17] != null) {
+            imageIds = ((String) result[17]).split(",");
+            imageNames = ((String) result[18]).split(",");
+        } else {
+            imageIds = new String[0];
+            imageNames = new String[0];
+        }
+        for (int i = 0; i < imageIds.length; i++) {
+            Image image = new Image();
+            image.setId(Long.parseLong(imageIds[i]));
+            image.setName(imageNames[i]);
+            property.getImages().add(image);
+        }
+
+        String[] categories;
+        if (result[19] != null) {
+            categories = ((String) result[19]).split(",");
+        } else {
+            categories = new String[0];
+        }
+        Set<Category> categorySet = Arrays.stream(categories)
+                .map(Category::valueOf)
+                .collect(Collectors.toSet());
+        property.setCategories(categorySet);
+
+        if (result[20] != null) {
+            property.setTag(Tag.valueOf((String) result[20]));
+        } else {
+            property.setTag(null);
+        }
+        return property;
+    }
+
 }

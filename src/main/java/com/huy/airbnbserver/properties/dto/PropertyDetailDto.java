@@ -1,8 +1,8 @@
 package com.huy.airbnbserver.properties.dto;
 
 import com.huy.airbnbserver.image.ImageDto;
-import com.huy.airbnbserver.properties.category.Category;
-import com.huy.airbnbserver.properties.category.Tag;
+import com.huy.airbnbserver.properties.enm.Category;
+import com.huy.airbnbserver.properties.enm.Tag;
 import com.huy.airbnbserver.system.annotation.ValueOfEnum;
 import com.huy.airbnbserver.system.annotation.ValueOfEnums;
 import com.huy.airbnbserver.user.dto.UserDto;

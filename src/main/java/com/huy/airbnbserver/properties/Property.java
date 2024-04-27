@@ -5,19 +5,17 @@
     import com.huy.airbnbserver.booking.Booking;
     import com.huy.airbnbserver.comment.Comment;
     import com.huy.airbnbserver.image.Image;
-    import com.huy.airbnbserver.properties.category.Category;
-    import com.huy.airbnbserver.properties.category.Tag;
+    import com.huy.airbnbserver.properties.enm.Category;
+    import com.huy.airbnbserver.properties.enm.Tag;
     import com.huy.airbnbserver.user.User;
     import jakarta.persistence.*;
-    import jakarta.validation.constraints.Max;
     import jakarta.validation.constraints.Min;
     import jakarta.validation.constraints.NotEmpty;
     import jakarta.validation.constraints.NotNull;
     import lombok.*;
     import org.hibernate.annotations.CreationTimestamp;
     import org.hibernate.annotations.UpdateTimestamp;
-    
-    import java.io.Serializable;
+
     import java.math.BigDecimal;
     import java.util.*;
 
@@ -83,6 +81,7 @@
         // can be null
         @Temporal(TemporalType.TIMESTAMP)
         @UpdateTimestamp
+        @Column(nullable = false)
         private Date updatedAt;
     
         // relationship

@@ -4,7 +4,6 @@ import com.huy.airbnbserver.booking.BookingRepository;
 import com.huy.airbnbserver.image.converter.ImageToImageDtoConverter;
 import com.huy.airbnbserver.properties.Property;
 import com.huy.airbnbserver.properties.PropertyRepository;
-import com.huy.airbnbserver.properties.category.Category;
 import com.huy.airbnbserver.properties.dto.PropertyDetailDto;
 
 import com.huy.airbnbserver.properties.dto.ReviewInfoProjection;
@@ -14,7 +13,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 @Component

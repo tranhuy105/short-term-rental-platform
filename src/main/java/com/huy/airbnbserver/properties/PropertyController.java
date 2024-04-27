@@ -1,16 +1,14 @@
 package com.huy.airbnbserver.properties;
 
-import com.huy.airbnbserver.properties.category.Area;
-import com.huy.airbnbserver.properties.category.Category;
-import com.huy.airbnbserver.properties.category.Tag;
+import com.huy.airbnbserver.properties.enm.*;
 import com.huy.airbnbserver.properties.converter.PropertyDtoToPropertyConverter;
 import com.huy.airbnbserver.properties.converter.PropertyToPropertyDtoConverter;
 import com.huy.airbnbserver.properties.converter.PropertyToPropertyOverviewDto;
 import com.huy.airbnbserver.properties.dto.PropertyDetailDto;
+import com.huy.airbnbserver.properties.dto.PropertyOverviewDto;
 import com.huy.airbnbserver.system.Result;
 import com.huy.airbnbserver.system.StatusCode;
 import com.huy.airbnbserver.system.Utils;
-import com.huy.airbnbserver.system.annotation.NotEmpty;
 import com.huy.airbnbserver.system.exception.InvalidSearchQueryException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -62,8 +60,6 @@ public class PropertyController {
         if (page != null && page < 1) {
             throw new InvalidSearchQueryException("Page must be greater than zero");
         }
-
-        System.out.println(page);
 
         if (pageSize != null && pageSize < 5) {
             throw new InvalidSearchQueryException("Page size must be at least 5");
@@ -183,9 +179,9 @@ public class PropertyController {
         var propertyList =  propertyService
                 .getAllLikedPropertiedByUserWithUserId(userId);
 
-        List<PropertyDetailDto> propertyDetailDtos = propertyList
+        List<PropertyOverviewDto> propertyDetailDtos = propertyList
                 .stream()
-                .map(propertyToPropertyDtoConverter::convert)
+                .map(propertyToPropertyOverviewDto::convert)
                 .toList();
 
         return new Result(true, StatusCode.SUCCESS, "Fetch all liked property", propertyDetailDtos);

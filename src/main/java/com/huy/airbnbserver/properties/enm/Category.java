@@ -1,4 +1,4 @@
-package com.huy.airbnbserver.properties.category;
+package com.huy.airbnbserver.properties.enm;
 
 public enum Category {
     WIFI,

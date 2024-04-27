@@ -32,16 +32,16 @@ public class BookingController {
             ) {
         bookingService.isDateValidCheck(bookingDto, propertyId);
 
-//        var savedBooking = bookingService.save(
-//                Objects.requireNonNull(bookingDtoToBookingConverter.convert(bookingDto)),
-//                Utils.extractAuthenticationId(authentication),
-//                propertyId
-//        );
+        var savedBooking = bookingService.save(
+                Objects.requireNonNull(bookingDtoToBookingConverter.convert(bookingDto)),
+                Utils.extractAuthenticationId(authentication),
+                propertyId
+        );
         return new Result(
                 true,
                 StatusCode.SUCCESS,
-                "new booking pending..."
-//                bookingToBookingDtoConverter.convert(savedBooking)
+                "new booking pending...",
+                bookingToBookingDtoConverter.convert(savedBooking)
         );
     }
 

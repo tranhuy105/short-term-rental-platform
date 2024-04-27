@@ -1,8 +1,8 @@
 package com.huy.airbnbserver.properties.converter;
 
 import com.huy.airbnbserver.properties.Property;
-import com.huy.airbnbserver.properties.category.Category;
-import com.huy.airbnbserver.properties.category.Tag;
+import com.huy.airbnbserver.properties.enm.Category;
+import com.huy.airbnbserver.properties.enm.Tag;
 import com.huy.airbnbserver.properties.dto.PropertyDetailDto;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;

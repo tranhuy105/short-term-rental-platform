@@ -15,12 +15,13 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query(value = "SELECT * FROM Booking b WHERE b.property_id = :propertyId", nativeQuery = true)
     List<Booking> findByPropertyId(Long propertyId);
 
-    @Query(value = "SELECT DISTINCT DATE(check_in_date) AS booking_date " +
-            "FROM booking " +
-            "WHERE property_id = :propertyId " +
-            "UNION " +
-            "SELECT DISTINCT DATE(check_out_date) AS booking_date " +
-            "FROM booking " +
-            "WHERE property_id = :propertyId", nativeQuery = true)
+    @Query(value = """
+            SELECT 
+                DISTINCT DATE(check_in_date) AS booking_date
+            FROM booking WHERE property_id = :propertyId 
+            UNION 
+            SELECT 
+                DISTINCT DATE(check_out_date) AS booking_date
+            FROM booking WHERE property_id = :propertyId""", nativeQuery = true)
     List<Date> findAllBookingDateOfProperty(@NonNull Long propertyId);
 }
