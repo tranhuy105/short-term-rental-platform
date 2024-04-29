@@ -11,6 +11,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
@@ -94,6 +95,12 @@ public class ExceptionHandlerAdvice {
     Result handleOtherException(Exception ex) {
         ex.printStackTrace();
         return new Result(false, StatusCode.INTERNAL_SERVER_ERROR, "Internal Server Error.", ex.getMessage());
+    }
+
+    @ExceptionHandler(DisabledException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    Result handleDisabledException(DisabledException ex) {
+        return new Result(false, 403, ex.getMessage());
     }
 
     @ExceptionHandler(InsufficientAuthenticationException.class)

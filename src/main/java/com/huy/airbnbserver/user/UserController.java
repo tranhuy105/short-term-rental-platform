@@ -27,6 +27,7 @@ public class UserController {
     private final UserService userService;
     private final UserToUserDtoConverter userToUserDtoConverter;
 
+    @Deprecated
     @GetMapping
     public Result findAllUsers() {
         List<User> users = userService.findAll();

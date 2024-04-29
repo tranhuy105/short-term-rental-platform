@@ -3,8 +3,10 @@ package com.huy.airbnbserver.comment;
 import com.huy.airbnbserver.comment.converter.CommentDtoToCommentConverter;
 import com.huy.airbnbserver.comment.converter.CommentToCommentDtoConverter;
 import com.huy.airbnbserver.system.Result;
+import com.huy.airbnbserver.system.SortDirection;
 import com.huy.airbnbserver.system.StatusCode;
 import com.huy.airbnbserver.system.Utils;
+import com.huy.airbnbserver.system.exception.InvalidSearchQueryException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -25,16 +27,38 @@ public class CommentController {
 
     @GetMapping("/properties/{propertyId}/comments")
     public Result fetchAll(
-            @PathVariable Long propertyId
+            @PathVariable Long propertyId,
+            @RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "page_size", required = false) Integer pageSize,
+            @RequestParam(value = "sort_direction", required = false) String sortDirectionParam
     ) {
-        List<CommentDto> commentDtoList = commentService.findByPropertyId(propertyId)
+        if (page != null && page < 1) {
+            throw new InvalidSearchQueryException("Page must be greater than zero");
+        }
+
+        if (pageSize != null && pageSize < 5) {
+            throw new InvalidSearchQueryException("Page size must be at least 5");
+        }
+
+        SortDirection sortDirection;
+        if (sortDirectionParam == null) {
+            sortDirection = SortDirection.DESC;
+        } else {
+            try {
+                sortDirection = SortDirection.valueOf(sortDirectionParam.toUpperCase());
+            } catch (IllegalArgumentException ex) {
+                throw new InvalidSearchQueryException("Sort direction can only be either 'asc' or 'desc'");
+            }
+        }
+
+        List<CommentDto> commentDtoList = commentService.findByPropertyId(propertyId, page, pageSize, sortDirection)
                 .stream()
                 .map(commentToCommentDtoConverter::convert)
                 .toList();
         return new Result(
                 true,
                 StatusCode.SUCCESS,
-                "Fetch All Comments Of A Property Success",
+                "Fetch Comments Success",
                 commentDtoList
         );
     }
@@ -58,7 +82,7 @@ public class CommentController {
         );
     }
 
-    @PutMapping("comments/{commentId}")
+    @PutMapping("/comments/{commentId}")
     public Result updateComment(
             @PathVariable Long commentId,
             @Valid @RequestBody CommentDto commentDto,
@@ -77,12 +101,17 @@ public class CommentController {
         );
     }
 
-    @DeleteMapping("comments/{commentId}")
+    @DeleteMapping("/comments/{commentId}")
     public Result deleteComment(
             @PathVariable Long commentId,
             Authentication authentication
     ) {
         commentService.delete(commentId, Utils.extractAuthenticationId(authentication));
         return new Result(true, 200, "Deleted Success");
+    }
+
+    @GetMapping("/comments/test")
+    public Result test() {
+        return new Result(true, 200, "ok");
     }
 }

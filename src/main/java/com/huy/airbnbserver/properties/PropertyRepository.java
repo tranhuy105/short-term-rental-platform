@@ -6,6 +6,7 @@ import com.huy.airbnbserver.properties.enm.Tag;
 import com.huy.airbnbserver.properties.dto.ReviewInfoProjection;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.lang.NonNull;
@@ -16,6 +17,11 @@ import java.util.Optional;
 
 
 public interface PropertyRepository extends JpaRepository<Property, Long> {
+
+    @NonNull
+    @Query(value = "SELECT * FROM property p WHERE p.id = :id", nativeQuery = true)
+    Optional<Property> findById(@NonNull Long id);
+
     @Query(value = """
             SELECT p 
             FROM Property p
@@ -97,12 +103,12 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
         FROM property p
         LEFT JOIN image i ON p.id = i.property_id
         LEFT JOIN comment c ON p.id = c.property_id
-        WHERE (:category1 IS NULL OR EXISTS 
+        WHERE (:category1 IS NULL OR EXISTS
             (SELECT 1 FROM property_categories pc1 WHERE pc1.property_id = p.id AND pc1.categories = :category1))
-        AND (:category2 IS NULL OR EXISTS 
+        AND (:category2 IS NULL OR EXISTS
             (SELECT 1 FROM property_categories pc2 WHERE pc2.property_id = p.id AND pc2.categories = :category2))
         AND (:tag IS NULL OR p.tag = :tag)
-        AND (:area IS NULL OR 
+        AND (:area IS NULL OR
             (p.longitude BETWEEN :minLongitude AND :maxLongitude) AND
             (p.latitude BETWEEN :minLatitude AND :maxLatitude))
         AND (:minNightlyPrice IS NULL OR :maxNightlyPrice IS NULL OR
@@ -111,7 +117,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
         AND (:minBathrooms IS NULL OR p.num_bathrooms >= :minBathrooms)
         AND (:minBedrooms IS NULL OR p.num_bedrooms >= :minBedrooms)
         GROUP BY p.id
-        ORDER BY updatedAt DESC
+        ORDER BY averageRating DESC
         LIMIT :limit OFFSET :offset
         """, nativeQuery = true)
     List<Object[]> findAllNative(@Nullable String category1,
@@ -131,7 +137,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
                                  @NonNull Long offset);
 
     @Query(value = """
-        SELECT 
+        SELECT
             p.id,
             p.nightly_price,
             p.name,
@@ -167,4 +173,12 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
         GROUP BY p.id""", nativeQuery = true)
     List<Object[]> findDetailByIdNative(@Param("id") Long id);
 
+    @Modifying
+    @Query(value = "INSERT INTO liked_property (user_id, property_id) VALUES (:userId, :propertyId)", nativeQuery = true)
+    void userLikeProperty(@NonNull Long propertyId, @NonNull Integer userId);
+
+    @Modifying
+    @Query(value = "DELETE FROM liked_property " +
+            "WHERE user_id = :userId AND property_id = :propertyId", nativeQuery = true)
+    void userUnlikeProperty(@NonNull Long propertyId, @NonNull Integer userId);
 }

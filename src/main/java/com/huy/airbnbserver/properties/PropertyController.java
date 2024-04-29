@@ -7,12 +7,14 @@ import com.huy.airbnbserver.properties.converter.PropertyToPropertyOverviewDto;
 import com.huy.airbnbserver.properties.dto.PropertyDetailDto;
 import com.huy.airbnbserver.properties.dto.PropertyOverviewDto;
 import com.huy.airbnbserver.system.Result;
+import com.huy.airbnbserver.system.SortDirection;
 import com.huy.airbnbserver.system.StatusCode;
 import com.huy.airbnbserver.system.Utils;
 import com.huy.airbnbserver.system.exception.InvalidSearchQueryException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -53,7 +56,9 @@ public class PropertyController {
             @RequestParam(value = "min_nightly_price", required = false) Double minNightlyPrice,
             @RequestParam(value = "max_nightly_price", required = false) Double maxNightlyPrice,
             @RequestParam(value = "page", required = false) Integer page,
-            @RequestParam(value = "page_size", required = false) Integer pageSize
+            @RequestParam(value = "page_size", required = false) Integer pageSize,
+            @RequestParam(value = "sort_column", required = false) String sortColumnParam,
+            @RequestParam(value = "sort_direction", required = false) String sortDirectionParam
             ) {
         Utils.validateSearchParams(tag, category1, category2, area, minBeds, minBedrooms, minBathrooms, minNightlyPrice, maxNightlyPrice, page, pageSize);
 
@@ -93,6 +98,29 @@ public class PropertyController {
             }
         }
 
+        SortDirection sortDirection;
+        if (sortDirectionParam == null) {
+            sortDirection = SortDirection.DESC;
+        } else {
+            try {
+                sortDirection = SortDirection.valueOf(sortDirectionParam.toUpperCase());
+            } catch (IllegalArgumentException ex) {
+                throw new InvalidSearchQueryException("Sort direction can only be either 'asc' or 'desc'");
+            }
+        }
+
+        SortColumn sortColumn;
+        if (sortColumnParam == null) {
+            sortColumn = SortColumn.updatedAt;
+        } else {
+            try {
+                sortColumn = SortColumn.valueOf(sortColumnParam);
+            } catch (IllegalArgumentException ex) {
+                throw new InvalidSearchQueryException(
+                        "Sort column only accept these value: " + Arrays.toString(SortColumn.values())
+                );
+            }
+        }
         return new Result(
                         true,
                         200,
@@ -108,19 +136,21 @@ public class PropertyController {
                                         minBathrooms,
                                         minBedrooms,
                                         page,
-                                        pageSize)
-//                                .stream().map(propertyToPropertyOverviewDto::convert).toList()
+                                        pageSize,
+                                        sortColumn,
+                                        sortDirection)
                 );
     }
 
     @PostMapping(path = "/properties",
             consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_JSON_VALUE})
-    public Result save(@RequestParam("images") List<MultipartFile> images,
+    @ResponseStatus(HttpStatus.CREATED)
+    public Result save(@RequestParam(value = "images", required = false) List<MultipartFile> images,
                        @Valid @RequestPart PropertyDetailDto propertyDetailDto,
                        Authentication authentication) throws IOException {
-        if (Utils.imageValidationFailed(images)) {
+        if (images != null && Utils.imageValidationFailed(images)) {
             return new Result(false, StatusCode.INVALID_ARGUMENT, "Invalid image files were provided", null);
-        };
+        }
 
 
         Property property = propertyDtoToPropertyConverter.convert(propertyDetailDto);
@@ -133,6 +163,24 @@ public class PropertyController {
                 StatusCode.CREATED,
                 "Created Property Success",
                 propertyToPropertyDtoConverter.convert(savedProperty));
+    }
+
+    @PutMapping("/properties/{propertyId}")
+    public Result update(@RequestParam(value = "images", required = false) List<MultipartFile> images,
+                         @PathVariable Long propertyId,
+                         @Valid @RequestPart PropertyDetailDto propertyDetailDto,
+                         Authentication authentication) throws IOException {
+        if (images != null && Utils.imageValidationFailed(images)) {
+            return new Result(false, StatusCode.INVALID_ARGUMENT, "Invalid image files were provided", null);
+        }
+
+
+        return new Result(
+                true, 200, "Update Success",
+                propertyToPropertyDtoConverter.convert(
+                propertyService.update(propertyId, propertyDtoToPropertyConverter.convert(propertyDetailDto), images))
+        );
+
     }
 
     @DeleteMapping("/properties/{propertyId}")

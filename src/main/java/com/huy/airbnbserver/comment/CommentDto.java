@@ -4,6 +4,7 @@ import com.huy.airbnbserver.user.dto.UserDto;
 import jakarta.validation.constraints.*;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 
 public record CommentDto(
         Long id,
@@ -11,8 +12,8 @@ public record CommentDto(
         String content,
         @NotNull @Min(1) @Max(5)
         Integer rating,
-        LocalDateTime created_at,
-        LocalDateTime updated_at,
+        Date created_at,
+        Date updated_at,
         UserDto user
 ) {
 }

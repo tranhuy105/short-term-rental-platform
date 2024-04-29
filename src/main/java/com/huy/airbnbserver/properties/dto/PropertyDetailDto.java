@@ -6,6 +6,7 @@ import com.huy.airbnbserver.properties.enm.Tag;
 import com.huy.airbnbserver.system.annotation.ValueOfEnum;
 import com.huy.airbnbserver.system.annotation.ValueOfEnums;
 import com.huy.airbnbserver.user.dto.UserDto;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -29,9 +30,9 @@ public record PropertyDetailDto(
         Integer num_bedrooms,
         @NotNull @Min(0)
         Integer num_bathrooms,
-        @NotNull @Min(0)
+        @NotNull @Min(-180) @Max(180)
         BigDecimal longitude,
-        @NotNull @Min(0)
+        @NotNull @Min(-90) @Max(90)
         BigDecimal latitude,
         @NotEmpty
         String description,
@@ -44,9 +45,9 @@ public record PropertyDetailDto(
         Double average_rating,
         Integer total_rating,
         List<Date> booking_date,
-        @ValueOfEnums(enumClass = Category.class)
+        @ValueOfEnums(enumClass = Category.class) @NotEmpty
         Set<String> categories,
-        @ValueOfEnum(enumClass = Tag.class)
+        @ValueOfEnum(enumClass = Tag.class) @NotNull
         String tag
 ) {
 

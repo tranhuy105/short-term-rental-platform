@@ -24,6 +24,7 @@ public class ImageController {
     private final ImageService imageService;
     private final ImageToImageDtoConverter imageToImageDtoConverter;
 
+    @Deprecated
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public Result uploadImage(@NotNull @RequestParam("images") List<MultipartFile> files) throws IOException {
 
@@ -43,6 +44,7 @@ public class ImageController {
         return ResponseEntity.status(200).contentType(MediaType.valueOf(MediaType.IMAGE_PNG_VALUE)).body(imageData);
     }
 
+    @Deprecated
     @GetMapping
     public Result getAll() {
         var imageDtos = imageService.findAll().stream()

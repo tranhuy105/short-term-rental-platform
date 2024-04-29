@@ -9,11 +9,24 @@ import java.util.List;
 import java.util.Optional;
 
 public interface BookingRepository extends JpaRepository<Booking, Long> {
-    @Query(value = "SELECT * FROM Booking b WHERE b.user_id = :userId", nativeQuery = true)
+    @Query(value = "SELECT * FROM booking b WHERE b.user_id = :userId", nativeQuery = true)
     List<Booking> findByUserId(Integer userId);
 
-    @Query(value = "SELECT * FROM Booking b WHERE b.property_id = :propertyId", nativeQuery = true)
+    @Query(value = "SELECT * FROM booking b WHERE b.property_id = :propertyId", nativeQuery = true)
     List<Booking> findByPropertyId(Long propertyId);
+
+    @Query(value = """
+        SELECT b FROM Booking b
+        LEFT JOIN FETCH b.property p
+        LEFT JOIN FETCH p.host
+        WHERE b.id = :id""")
+    Optional<Booking> findByIdEagerPropertyHost(Long id);
+
+    @Query(value = """
+        SELECT b FROM Booking b
+        LEFT JOIN FETCH b.user
+        WHERE b.id = :id""")
+    Optional<Booking> findByIdEagerHost(Long id);
 
     @Query(value = """
             SELECT 

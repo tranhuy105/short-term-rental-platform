@@ -42,7 +42,6 @@ public class BookingService {
 
     @Transactional(readOnly = true)
     public List<Booking> getAllBookingByPropertyId(Long propertyId, Integer userId) {
-        userRepository.findById(userId).orElseThrow(()->new ObjectNotFoundException("user", userId));
         var property = propertyRepository
                 .findById(propertyId)
                 .orElseThrow(()->new ObjectNotFoundException("property", propertyId));
@@ -54,8 +53,7 @@ public class BookingService {
 
     @Transactional
     public void delete(Long id, Integer userId) {
-        userRepository.findById(userId).orElseThrow(()->new ObjectNotFoundException("user", userId));
-        var deletedBooking = bookingRepository.findById(id).orElseThrow(()->new ObjectNotFoundException("booking", id));
+        var deletedBooking = bookingRepository.findByIdEagerHost(id).orElseThrow(()->new ObjectNotFoundException("booking", id));
 
         if (!userId.equals(deletedBooking.getUser().getId())) {
             throw new AccessDeniedException("Access denied for this user");
@@ -67,8 +65,7 @@ public class BookingService {
 
     @Transactional
     public void confirm(Long id, Integer userId) {
-        userRepository.findById(userId).orElseThrow(()->new ObjectNotFoundException("user", userId));
-        var confirmBooking = bookingRepository.findById(id).orElseThrow(()->new ObjectNotFoundException("booking", id));
+        var confirmBooking = bookingRepository.findByIdEagerPropertyHost(id).orElseThrow(()->new ObjectNotFoundException("booking", id));
         if (!confirmBooking.getProperty().getHost().getId().equals(userId)) {
             throw new AccessDeniedException("Access denied for this user");
         }

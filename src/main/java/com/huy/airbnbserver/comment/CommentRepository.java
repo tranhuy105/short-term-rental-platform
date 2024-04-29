@@ -23,4 +23,56 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
             "LEFT JOIN FETCH u.avatar " +
             "WHERE c.id = :id")
     Optional<Comment> findByIdEager(@NonNull Long id);
+
+    @Query(value = """
+            SELECT
+                c.id,
+                c.content,
+                c.rating,
+                c.created_at,
+                c.updated_at,
+                u.id,
+                u.firstname,
+                u.lastname,
+                u.email,
+                u.enabled,
+                u.created_at,
+                u.updated_at,
+                a.id,
+                a.name
+            FROM comment c
+            LEFT JOIN user_account u ON u.id = c.user_id
+            LEFT JOIN image a ON a.id = u.avatar_id
+            WHERE c.property_id = :propertyId
+            ORDER BY c.updated_at DESC
+            LIMIT :limit OFFSET :offset""", nativeQuery = true)
+    List<Object[]> findAllByPropertyIdNativeDesc(@NonNull Long propertyId,
+                                             @NonNull Integer limit,
+                                             @NonNull Integer offset);
+
+    @Query(value = """
+            SELECT
+                c.id,
+                c.content,
+                c.rating,
+                c.created_at,
+                c.updated_at,
+                u.id,
+                u.firstname,
+                u.lastname,
+                u.email,
+                u.enabled,
+                u.created_at,
+                u.updated_at,
+                a.id,
+                a.name
+            FROM comment c
+            LEFT JOIN user_account u ON u.id = c.user_id
+            LEFT JOIN image a ON a.id = u.avatar_id
+            WHERE c.property_id = :propertyId
+            ORDER BY c.updated_at
+            LIMIT :limit OFFSET :offset""", nativeQuery = true)
+    List<Object[]> findAllByPropertyIdNativeAsc(@NonNull Long propertyId,
+                                                 @NonNull Integer limit,
+                                                 @NonNull Integer offset);
 }

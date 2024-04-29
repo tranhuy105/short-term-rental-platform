@@ -1,6 +1,8 @@
 package com.huy.airbnbserver.properties.converter;
 
 import com.huy.airbnbserver.booking.BookingRepository;
+import com.huy.airbnbserver.image.Image;
+import com.huy.airbnbserver.image.ImageDto;
 import com.huy.airbnbserver.image.converter.ImageToImageDtoConverter;
 import com.huy.airbnbserver.properties.Property;
 import com.huy.airbnbserver.properties.PropertyRepository;
@@ -13,6 +15,8 @@ import lombok.AllArgsConstructor;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
@@ -27,6 +31,11 @@ public class PropertyToPropertyDtoConverter implements Converter<Property, Prope
     public PropertyDetailDto convert(Property source) {
         Double averageRating = (double) 0;
         Integer totalRating = 0;
+
+        List<Image> images = source.getImages();
+        List<ImageDto> imageDtos = images.isEmpty() ? Collections.emptyList() : images.stream()
+                .map(imageToImageDtoConverter::convert)
+                .toList();
 
         ReviewInfoProjection averageAndTotalRating = propertyRepository.findAverageRatingForProperty(source.getId());
 
@@ -49,10 +58,7 @@ public class PropertyToPropertyDtoConverter implements Converter<Property, Prope
                 source.getAddressLine(),
                 source.getCreatedAt(),
                 source.getUpdatedAt(),
-                source.getImages()
-                        .stream()
-                        .map(imageToImageDtoConverter::convert)
-                        .toList(),
+                imageDtos,
                 userToUserDtoConverter.convert(source.getHost()),
                 averageRating,
                 totalRating,

@@ -2,9 +2,11 @@ package com.huy.airbnbserver.properties;
 
 import com.huy.airbnbserver.image.Image;
 import com.huy.airbnbserver.image.ImageDto;
+import com.huy.airbnbserver.image.ImageRepository;
 import com.huy.airbnbserver.image.ImageUtils;
 import com.huy.airbnbserver.properties.enm.*;
 import com.huy.airbnbserver.properties.dto.PropertyOverviewProjection;
+import com.huy.airbnbserver.system.SortDirection;
 import com.huy.airbnbserver.system.exception.EntityAlreadyExistException;
 import com.huy.airbnbserver.system.exception.ObjectNotFoundException;
 import com.huy.airbnbserver.user.User;
@@ -26,6 +28,8 @@ import java.util.stream.Collectors;
 public class PropertyService {
     private final PropertyRepository propertyRepository;
     private final UserRepository userRepository;
+    private final ImageRepository imageRepository;
+    private final NativePropertyRepository nativePropertyRepository;
 
     public Property findById(Long id) {
         List<Object[]> res = propertyRepository.findDetailByIdNative(id);
@@ -36,25 +40,72 @@ public class PropertyService {
         return mapToProperty(res.get(0));
     }
 
+    @Transactional
     public Property save(Property property, Integer userId, List<MultipartFile> images) throws IOException {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ObjectNotFoundException("user", userId));
         List<Image> savedImages = new ArrayList<>();
-
-        for (MultipartFile image : images) {
-            var saveImage = Image.builder()
-                    .name(image.getOriginalFilename())
-                    .imageData(ImageUtils.compressImage(image.getBytes()))
-                    .property(property)
-                    .build();
-            savedImages.add(saveImage);
+        if (images != null) {
+            for (MultipartFile image : images) {
+                var saveImage = Image.builder()
+                        .name(image.getOriginalFilename())
+                        .imageData(ImageUtils.compressImage(image.getBytes()))
+                        .property(property)
+                        .build();
+                savedImages.add(saveImage);
+            }
         }
 
         property.setHost(user);
         property.setImages(savedImages);
+//        return property;
         return propertyRepository.save(property);
     }
 
+    @Transactional
+    public Property update(Long propertyId, Property property, List<MultipartFile> images) throws IOException {
+        Property savedProperty = propertyRepository.findDetailById(propertyId).orElseThrow(
+                () -> new ObjectNotFoundException("property", propertyId)
+        );
+        List<Image> savedImages = new ArrayList<>();
+
+        if (images != null) {
+            for (MultipartFile image : images) {
+                var saveImage = Image.builder()
+                        .name(image.getOriginalFilename())
+                        .imageData(ImageUtils.compressImage(image.getBytes()))
+                        .property(savedProperty)
+                        .build();
+                savedImages.add(saveImage);
+            }
+        }
+
+        imageRepository.deleteAll(savedProperty.getImages());
+
+        for (Category category : new HashSet<>(savedProperty.getCategories())) {
+            savedProperty.removeCategory(category);
+        }
+
+        for (Category category : property.getCategories()) {
+            savedProperty.addCategory(category);
+        }
+
+        savedProperty.setImages(savedImages);
+        savedProperty.setTag(property.getTag());
+        savedProperty.setName(property.getName());
+        savedProperty.setNightlyPrice(property.getNightlyPrice());
+        savedProperty.setMaxGuests(property.getMaxGuests());
+        savedProperty.setNumBeds(property.getNumBeds());
+        savedProperty.setNumBedrooms(property.getNumBedrooms());
+        savedProperty.setNumBathrooms(property.getNumBathrooms());
+        savedProperty.setLongitude(property.getLongitude());
+        savedProperty.setLatitude(property.getLatitude());
+        savedProperty.setDescription(property.getDescription());
+        savedProperty.setAddressLine(property.getAddressLine());
+        return propertyRepository.save(savedProperty);
+    }
+
+    @Transactional
     public void delete(Long id, Integer userId) {
         var deletedProperty = propertyRepository.findById(id).orElseThrow(() -> new ObjectNotFoundException("property", id));
         if (!userId.equals(deletedProperty.getHost().getId())) {
@@ -70,27 +121,19 @@ public class PropertyService {
 
 
     public void like(Long id, Integer userId) {
-        var property = propertyRepository.findById(id).orElseThrow(() -> new ObjectNotFoundException("property", id));
-        var user = userRepository.findById(userId).orElseThrow(() -> new ObjectNotFoundException("user", id));
-
         if (!propertyRepository.getLikedDetailsOfUserIdAndPropertyId(userId, id).isEmpty()) {
             throw new EntityAlreadyExistException("Liked Entity Associated with this userId and propertyId");
         }
 
-        property.addLikedUser(user);
-        propertyRepository.save(property);
+        propertyRepository.userLikeProperty(id, userId);
     }
 
     public void unlike(Long id, Integer userId) {
-        Property property = propertyRepository.findById(id).orElseThrow(() -> new ObjectNotFoundException("property", id));
-        var user = userRepository.findById(userId).orElseThrow(() -> new ObjectNotFoundException("user", id));
-
         if (propertyRepository.getLikedDetailsOfUserIdAndPropertyId(userId, id).isEmpty()) {
             throw new ObjectNotFoundException("liked entity", "userId: " + userId + " propertyId: " + id);
         }
 
-        property.removeLikedUser(user);
-        propertyRepository.save(property);
+        propertyRepository.userUnlikeProperty(id, userId);
     }
 
     public List<Property> getAllLikedPropertiedByUserWithUserId(Integer userId) {
@@ -108,7 +151,9 @@ public class PropertyService {
             Integer minBathrooms,
             Integer minBedrooms,
             Integer page,
-            Integer pageSize
+            Integer pageSize,
+            SortColumn sortColumn,
+            SortDirection sortDirection
     ) {
         var minLongitude = area != null ? area.getMinLongitude() : null;
         var maxLongitude = area != null ? area.getMaxLongitude() : null;
@@ -123,7 +168,9 @@ public class PropertyService {
         int _limit = pageSize == null ? 3 : pageSize;
         long offset = ((long) (_page - 1) * _limit);
 
-        List<Object[]> results = propertyRepository.findAllNative(
+        List<Object[]> results = nativePropertyRepository.findAllNative(
+                sortColumn.name(),
+                sortDirection.name(),
                 _category1,
                 _category2,
                 _tag,
@@ -243,10 +290,13 @@ public class PropertyService {
         host.setEnabled((boolean) result[23]);
         host.setCreatedAt((Date) result[24]);
         host.setUpdatedAt((Date) result[25]);
-        Image avatar = new Image();
-        avatar.setId((Long) result[15]);
-        avatar.setName((String) result[16]);
-        host.setAvatar(avatar);
+
+        if (result[15] != null) {
+            Image avatar = new Image();
+            avatar.setId((Long) result[15]);
+            avatar.setName((String) result[16]);
+            host.setAvatar(avatar);
+        }
         property.setHost(host);
 
         String[] imageIds;
