@@ -9,11 +9,10 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.zip.DataFormatException;
 
 @RestController
@@ -24,20 +23,6 @@ public class ImageController {
     private final ImageService imageService;
     private final ImageToImageDtoConverter imageToImageDtoConverter;
 
-    @Deprecated
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public Result uploadImage(@NotNull @RequestParam("images") List<MultipartFile> files) throws IOException {
-
-        if (Utils.imageValidationFailed(files)) {
-            return new Result(false, StatusCode.INVALID_ARGUMENT, "Invalid image files were provided", null);
-        }
-
-        var imageDtos = imageService.upload(files).stream()
-                .map(imageToImageDtoConverter::convert)
-                .toList();
-        return new Result(true, StatusCode.SUCCESS, "Success", imageDtos);
-    }
-
     @GetMapping("/{id}")
     public ResponseEntity<?> downloadImage(@Valid @PathVariable Long id) throws DataFormatException, IOException {
         byte[] imageData = imageService.download(id);
@@ -47,9 +32,10 @@ public class ImageController {
     @Deprecated
     @GetMapping
     public Result getAll() {
-        var imageDtos = imageService.findAll().stream()
-                .map(imageToImageDtoConverter::convert)
-                .toList();
-        return new Result(true, 200, "fetch all image", imageDtos);
+//        var imageDtos = imageService.findAll().stream()
+//                .map(imageToImageDtoConverter::convert)
+//                .toList();
+//        return new Result(true, 200, "fetch all image", imageDtos);
+        throw new AccessDeniedException("Deprecated Routes, About To Remove Soon");
     }
 }

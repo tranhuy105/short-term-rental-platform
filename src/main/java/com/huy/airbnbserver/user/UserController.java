@@ -4,15 +4,12 @@ package com.huy.airbnbserver.user;
 import com.huy.airbnbserver.system.Result;
 import com.huy.airbnbserver.system.StatusCode;
 import com.huy.airbnbserver.system.Utils;
-import com.huy.airbnbserver.user.converter.UserDtoToUserConverter;
 import com.huy.airbnbserver.user.converter.UserToUserDtoConverter;
 import com.huy.airbnbserver.user.dto.UserDto;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;

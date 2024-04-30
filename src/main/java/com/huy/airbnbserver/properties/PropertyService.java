@@ -165,7 +165,7 @@ public class PropertyService {
         String _tag = tag == null ? null : tag.name();
 
         int _page = page == null ? 1 : page;
-        int _limit = pageSize == null ? 3 : pageSize;
+        int _limit = pageSize == null ? 5 : pageSize;
         long offset = ((long) (_page - 1) * _limit);
 
         List<Object[]> results = nativePropertyRepository.findAllNative(
