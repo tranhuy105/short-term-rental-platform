@@ -1,46 +1,43 @@
 package com.huy.airbnbserver.image;
 
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
 public class ImageUtils {
+    public static byte[] compressImage(MultipartFile file, float quality) throws IOException {
+        // Convert MultipartFile to BufferedImage
+        InputStream fileInputStream = new ByteArrayInputStream(file.getBytes());
+        BufferedImage image = ImageIO.read(fileInputStream);
 
-    public static final int BITE_SIZE = 4 * 1024;
+        // Get a ImageWriter for jpeg format
+        ImageWriter writer = ImageIO.getImageWritersByFormatName("jpg").next();
 
-    public static byte[] compressImage(byte[] data) throws IOException {
-        Deflater deflater = new Deflater();
-        deflater.setLevel(Deflater.BEST_COMPRESSION);
-        deflater.setInput(data);
-        deflater.finish();
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream(data.length);
-        byte[] tmp = new byte[BITE_SIZE];
+        // Instantiate an ImageWriteParam object with default compression options
+        ImageWriteParam param = writer.getDefaultWriteParam();
 
-        while(!deflater.finished()) {
-            int size = deflater.deflate(tmp);
-            outputStream.write(tmp,0, size);
-        }
+        // Set the compression quality
+        param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+        param.setCompressionQuality(quality); // The quality parameter
 
-        outputStream.close();
+        // Write the image to a ByteArrayOutputStream using the specified quality
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        ImageOutputStream imageOutputStream = ImageIO.createImageOutputStream(byteArrayOutputStream);
+        writer.setOutput(imageOutputStream);
+        writer.write(null, new IIOImage(image, null, null), param);
 
-        return outputStream.toByteArray();
-    }
-
-    public static byte[] decompressImage(byte[] data) throws DataFormatException, IOException {
-        Inflater inflater = new Inflater();
-        inflater.setInput(data);
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream(data.length);
-        byte[] tmp = new byte[BITE_SIZE];
-
-        while (!inflater.finished()) {
-            int count = inflater.inflate(tmp);
-            outputStream.write(tmp, 0, count);
-        }
-
-        outputStream.close();
-
-        return outputStream.toByteArray();
+        return byteArrayOutputStream.toByteArray();
     }
 }

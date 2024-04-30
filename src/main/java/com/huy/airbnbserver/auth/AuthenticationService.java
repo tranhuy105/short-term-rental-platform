@@ -14,10 +14,8 @@ import com.huy.airbnbserver.user.converter.UserToUserDtoConverter;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.parameters.P;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -35,9 +33,6 @@ public class AuthenticationService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final UserToUserDtoConverter userToUserDtoConverter;
-
-    @Value("${application.mailing.frontend.activation-url}")
-    private String activationUrl;
 
     @Transactional
     public void registerUser(RegistrationRequest request) throws MessagingException {
@@ -104,6 +99,25 @@ public class AuthenticationService {
         return "active success";
     }
 
+    @Transactional
+    public String resend(String email) {
+        var user = userRepository.findByEmail(email).orElseThrow(
+                ()-> new ObjectNotFoundException("user", email)
+        );
+
+        if (user.isEnabled()) {
+            return "this user's account has already been activated";
+        }
+
+        tokenRepository.deleteByUserId(user.getId());
+        try {
+            sendValidationEmail(user);
+        } catch (MessagingException e) {
+            throw new RuntimeException(e);
+        }
+        return "token resent! Please check your mail";
+    }
+
 
     // UTILS
     @Transactional
@@ -114,7 +128,6 @@ public class AuthenticationService {
                 user.getEmail(),
                 user.getFullname(),
                 EmailTemplateName.ACTIVATE_ACCOUNT,
-                activationUrl,
                 newToken,
                 "Account activation"
         );

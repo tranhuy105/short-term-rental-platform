@@ -35,7 +35,3 @@ application:
     jwt:
       secretKey: mysupersecretkeyihavetomakeitlongoriwillgetanexceptionfortooshortlmao
       jwtExpiration: 8640000 # 1 day
-
-  mailing:
-    frontend:
-      activation-url: http://localhost:5173/activate-account

@@ -27,7 +27,7 @@ public class ImageService {
         for (MultipartFile file : files) {
             var saveImage = Image.builder()
                     .name(file.getOriginalFilename())
-                    .imageData(ImageUtils.compressImage(file.getBytes()))
+                    .imageData(ImageUtils.compressImage(file, 0.2F))
                     .build();
             imageRepository.save(saveImage);
             savedImages.add(saveImage);
@@ -36,11 +36,11 @@ public class ImageService {
         return savedImages;
     }
 
-    public byte[] download(@NotEmpty Long id) throws DataFormatException, IOException {
+    public byte[] download(@NotEmpty Long id) {
         Image image = imageRepository.findById(id).orElseThrow(
                 () -> new ObjectNotFoundException("image", id)
         );
-        return ImageUtils.decompressImage(image.getImageData());
+        return image.getImageData();
     }
 
     public List<Image> findAll() {

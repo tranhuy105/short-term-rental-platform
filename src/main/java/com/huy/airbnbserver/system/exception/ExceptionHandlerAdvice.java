@@ -7,6 +7,8 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.SignatureException;
 import jakarta.validation.ConstraintViolationException;
+import org.apache.tomcat.util.http.fileupload.impl.FileCountLimitExceededException;
+import org.apache.tomcat.util.http.fileupload.impl.FileSizeLimitExceededException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -32,6 +34,17 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class ExceptionHandlerAdvice {
+    @ExceptionHandler(FileSizeLimitExceededException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    Result handleFileSizeLimitExceededException(FileSizeLimitExceededException ex) {
+        return new Result(false, 400, "Maximum file size is 3mb", ex.getMessage());
+    }
+
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    Result handleHandlerMethodValidationException(HandlerMethodValidationException ex) {
+        return new Result(false, StatusCode.INVALID_ARGUMENT, ex.getMessage());
+    }
 
     @ExceptionHandler(ObjectNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)

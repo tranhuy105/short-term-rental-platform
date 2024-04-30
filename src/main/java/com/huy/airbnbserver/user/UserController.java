@@ -79,6 +79,10 @@ public class UserController {
             return new Result(false,  StatusCode.UNAUTHORIZED, "Action Not Allow For This User");
         }
 
+        if (files != null && Utils.imageValidationFailed(files)) {
+            return new Result(false, StatusCode.INVALID_ARGUMENT, "Invalid image files were provided", null);
+        }
+
         userService.assignAvatar(userId, files);
         return new Result(true, 200, "Avatar upload success!");
     }

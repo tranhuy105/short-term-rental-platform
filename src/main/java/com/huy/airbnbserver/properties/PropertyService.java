@@ -49,7 +49,7 @@ public class PropertyService {
             for (MultipartFile image : images) {
                 var saveImage = Image.builder()
                         .name(image.getOriginalFilename())
-                        .imageData(ImageUtils.compressImage(image.getBytes()))
+                        .imageData(ImageUtils.compressImage(image, 0.3F))
                         .property(property)
                         .build();
                 savedImages.add(saveImage);
@@ -73,7 +73,7 @@ public class PropertyService {
             for (MultipartFile image : images) {
                 var saveImage = Image.builder()
                         .name(image.getOriginalFilename())
-                        .imageData(ImageUtils.compressImage(image.getBytes()))
+                        .imageData(ImageUtils.compressImage(image, 0.3F))
                         .property(savedProperty)
                         .build();
                 savedImages.add(saveImage);
@@ -102,6 +102,29 @@ public class PropertyService {
         savedProperty.setLatitude(property.getLatitude());
         savedProperty.setDescription(property.getDescription());
         savedProperty.setAddressLine(property.getAddressLine());
+        return propertyRepository.save(savedProperty);
+    }
+
+    @Transactional
+    public Property updateImages(Long propertyId, List<MultipartFile> images) throws IOException {
+        var savedProperty = propertyRepository.findDetailById(propertyId).orElseThrow(
+                () -> new ObjectNotFoundException("property", propertyId)
+        );
+        List<Image> savedImages = new ArrayList<>();
+
+        if (images != null) {
+            for (MultipartFile image : images) {
+                var saveImage = Image.builder()
+                        .name(image.getOriginalFilename())
+                        .imageData(ImageUtils.compressImage(image, 0.3F))
+                        .property(savedProperty)
+                        .build();
+                savedImages.add(saveImage);
+            }
+        }
+
+        imageRepository.deleteAll(savedProperty.getImages());
+        savedProperty.setImages(savedImages);
         return propertyRepository.save(savedProperty);
     }
 

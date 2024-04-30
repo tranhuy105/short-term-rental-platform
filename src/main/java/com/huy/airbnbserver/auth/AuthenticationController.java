@@ -4,6 +4,7 @@ package com.huy.airbnbserver.auth;
 import com.huy.airbnbserver.system.Result;
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -33,8 +34,15 @@ public class AuthenticationController {
 
     @GetMapping("/activate")
     public Result activate(
-            @RequestParam String token
+            @RequestParam("token") String token
     ) throws MessagingException {
         return new Result(true, 200, "Transaction done", authenticationService.activate(token));
+    }
+
+    @GetMapping("/resend-token")
+    public Result resend(
+            @Email @RequestParam("email") String email
+    ) {
+        return new Result(true, 200, authenticationService.resend(email));
     }
 }

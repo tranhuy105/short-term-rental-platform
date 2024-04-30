@@ -4,6 +4,7 @@ package com.huy.airbnbserver.system;
 import com.huy.airbnbserver.system.exception.InvalidSearchQueryException;
 import com.huy.airbnbserver.user.User;
 import com.huy.airbnbserver.user.UserPrincipal;
+import org.apache.tomcat.util.http.fileupload.impl.FileSizeLimitExceededException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.multipart.MultipartFile;
@@ -61,17 +62,15 @@ public class Utils {
         }
     }
 
-    public static User extractAuthenticationUser(Authentication authentication) {
-        if (authentication != null && authentication.isAuthenticated()) {
-            return ((UserPrincipal)authentication.getPrincipal()).getUser();
-        } else {
-            throw new AccessDeniedException("Unauthenticated User");
-        }
-    }
-
-    public static boolean imageValidationFailed(List<MultipartFile> images) {
+    public static boolean imageValidationFailed(List<MultipartFile> images) throws FileSizeLimitExceededException {
         if (images.isEmpty()) {
             return true;
+        }
+
+        for (MultipartFile image : images) {
+            if (image.getSize() > 3 * 1024 * 1024) {
+                throw new FileSizeLimitExceededException("File size is too large for: " + image.getOriginalFilename(), image.getSize(), 3 * 1024 * 1024);
+            }
         }
 
         return !images.stream()
