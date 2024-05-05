@@ -80,7 +80,11 @@ public class UserController {
         }
 
         if (files != null && Utils.imageValidationFailed(files)) {
-            return new Result(false, StatusCode.INVALID_ARGUMENT, "Invalid image files were provided", null);
+            return new Result(false, StatusCode.INVALID_ARGUMENT, "Invalid image files were provided");
+        }
+
+        if (files != null && files.size() > 1) {
+            new Result(false, StatusCode.INVALID_ARGUMENT, "Too many images were provided, only accept 1");
         }
 
         userService.assignAvatar(userId, files);

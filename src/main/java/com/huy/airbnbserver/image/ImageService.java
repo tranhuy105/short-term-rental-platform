@@ -21,7 +21,6 @@ public class ImageService {
     private final ImageRepository imageRepository;
 
     public List<Image> upload(@NotNull List<MultipartFile> files) throws IOException {
-
         List<Image> savedImages = new ArrayList<>();
 
         for (MultipartFile file : files) {
@@ -29,7 +28,6 @@ public class ImageService {
                     .name(file.getOriginalFilename())
                     .imageData(ImageUtils.compressImage(file, 0.2F))
                     .build();
-            imageRepository.save(saveImage);
             savedImages.add(saveImage);
         }
 

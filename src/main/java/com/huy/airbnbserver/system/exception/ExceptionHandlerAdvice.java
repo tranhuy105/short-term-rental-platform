@@ -35,9 +35,17 @@ import java.util.Map;
 @RestControllerAdvice
 public class ExceptionHandlerAdvice {
     @ExceptionHandler(FileSizeLimitExceededException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
     Result handleFileSizeLimitExceededException(FileSizeLimitExceededException ex) {
-        return new Result(false, 400, "Maximum file size is 3mb", ex.getMessage());
+        return new Result(false, 422,
+                "Maximum Allowed Size: "+ex.getPermittedSize()+", Actual Size: " +ex.getActualSize(),
+                ex.getMessage());
+    }
+
+    @ExceptionHandler(UnsupportedImageFormatException.class)
+    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+    Result handleUnsupportedImageFormatException(UnsupportedImageFormatException ex) {
+        return new Result(false, 422, ex.getMessage());
     }
 
     @ExceptionHandler(HandlerMethodValidationException.class)

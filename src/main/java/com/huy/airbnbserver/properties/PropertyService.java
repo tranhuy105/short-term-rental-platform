@@ -24,7 +24,6 @@ import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
-@Transactional
 public class PropertyService {
     private final PropertyRepository propertyRepository;
     private final UserRepository userRepository;
@@ -142,7 +141,7 @@ public class PropertyService {
         propertyRepository.delete(deletedProperty);
     }
 
-
+    @Transactional
     public void like(Long id, Integer userId) {
         if (!propertyRepository.getLikedDetailsOfUserIdAndPropertyId(userId, id).isEmpty()) {
             throw new EntityAlreadyExistException("Liked Entity Associated with this userId and propertyId");
@@ -151,6 +150,7 @@ public class PropertyService {
         propertyRepository.userLikeProperty(id, userId);
     }
 
+    @Transactional
     public void unlike(Long id, Integer userId) {
         if (propertyRepository.getLikedDetailsOfUserIdAndPropertyId(userId, id).isEmpty()) {
             throw new ObjectNotFoundException("liked entity", "userId: " + userId + " propertyId: " + id);
