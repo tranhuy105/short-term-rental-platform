@@ -23,12 +23,29 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
     Optional<Property> findById(@NonNull Long id);
 
     @Query(value = """
-            SELECT p
-            FROM Property p
-            LEFT JOIN FETCH p.images
-            JOIN FETCH p.likedByUsers u
-            WHERE u.id = :userId""")
-    List<Property> getLikedByUserId(Integer userId);
+            SELECT
+                p.id AS id,
+                p.nightly_price AS nightlyPrice,
+                p.name AS name,
+                p.longitude AS longitude,
+                p.latitude AS latitude,
+                p.created_at AS createdAt,
+                p.updated_at AS updatedAt,
+                p.num_beds AS numBeds,
+                GROUP_CONCAT(DISTINCT i.id) AS imageIds,
+                GROUP_CONCAT(DISTINCT i.name) AS imageNames,
+                COALESCE(AVG(c.rating), 0) AS averageRating,
+                COUNT(*) OVER()
+            FROM property p
+            LEFT JOIN image i ON p.id = i.property_id
+            LEFT JOIN comment c ON p.id = c.property_id
+            LEFT JOIN liked_property lp ON p.id = lp.property_id
+            WHERE lp.user_id = :userId
+            GROUP BY p.id
+            LIMIT :limit OFFSET :offset""", nativeQuery = true)
+    List<Object[]> getLikedByUserId(@NonNull Integer userId,
+                        @NonNull Long limit,
+                        @NonNull Long offset);
 
     @Query(value = "SELECT * " +
                 "FROM liked_property l " +

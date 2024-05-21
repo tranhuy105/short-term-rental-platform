@@ -166,8 +166,16 @@ public class PropertyService {
         propertyRepository.userUnlikeProperty(id, userId);
     }
 
-    public List<Property> getAllLikedPropertiedByUserWithUserId(Integer userId) {
-        return propertyRepository.getLikedByUserId(userId);
+    public List<PropertyOverviewProjection> getAllLikedPropertiedByUserWithUserId(Integer userId, int page, int pageSize) {
+        long _limit;
+        _limit = pageSize;
+        long offset = ((long) (page - 1) * _limit);
+
+        return propertyRepository
+                .getLikedByUserId(userId, _limit, offset)
+                .stream()
+                .map(this::mapToPropertyOverviewProjection)
+                .toList();
     }
 
     public List<PropertyOverviewProjection> findAll(

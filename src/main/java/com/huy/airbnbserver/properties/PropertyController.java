@@ -182,8 +182,7 @@ public class PropertyController {
     @PutMapping("/properties/{propertyId}")
     public Result update(@RequestParam(value = "images", required = false) List<MultipartFile> images,
                          @PathVariable Long propertyId,
-                         @Valid @RequestPart PropertyDetailDto propertyDetailDto,
-                         Authentication authentication) throws IOException {
+                         @Valid @RequestPart PropertyDetailDto propertyDetailDto) throws IOException {
         if (images != null && Utils.imageValidationFailed(images)) {
             return new Result(false, StatusCode.INVALID_ARGUMENT, "Invalid image files were provided", null);
         }
@@ -197,6 +196,9 @@ public class PropertyController {
 
     }
 
+
+
+    // TODO: Authorized user
     @PutMapping("/properties/{propertyId}/images")
     public Result updateImages(@RequestParam(value = "images") List<MultipartFile> images,
                          @PathVariable Long propertyId,
@@ -246,21 +248,41 @@ public class PropertyController {
         return new Result(true, 200, "Success");
     }
 
+    // TODO: Add pagination
     @GetMapping("/users/{userId}/liked-properties")
     public Result getLikedPropertiesByUser(Authentication authentication,
-                                           @PathVariable Integer userId) {
+                                           @PathVariable Integer userId,
+                                           @RequestParam(value = "page", required = false) Integer page,
+                                           @RequestParam(value = "page_size", required = false) Integer pageSize) {
+        if (page != null && page < 1) {
+            throw new InvalidSearchQueryException("Page must be greater than zero");
+        }
+
+        if (pageSize != null && pageSize < 5) {
+            throw new InvalidSearchQueryException("Page size must be at least 5");
+        }
+
         if (!userId.equals(Utils.extractAuthenticationId(authentication))) {
             throw new AccessDeniedException("Access Denied For This User");
         }
 
-        var propertyList =  propertyService
-                .getAllLikedPropertiedByUserWithUserId(userId);
+        int _page = page == null ? 1 : page;
+        int _pageSize = pageSize == null ? 5 : pageSize;
 
-        List<PropertyOverviewDto> propertyDetailDtos = propertyList
+        var propertyList =  propertyService
+                .getAllLikedPropertiedByUserWithUserId(userId, _page, _pageSize);
+
+        Long totalProperty = propertyList.isEmpty() ? 0 : propertyList.get(0).getTotalProperty();
+        PageMetadata pageData = new PageMetadata((long)_page, (long)_pageSize, totalProperty);
+
+        List<PropertyOverviewProjectionDto> propertyDetailDtos = propertyList
                 .stream()
-                .map(propertyToPropertyOverviewDto::convert)
+                .map(propertyOverProjectionToPropertyOverProjectionDto::convert)
                 .toList();
 
-        return new Result(true, StatusCode.SUCCESS, "Fetch all liked property", propertyDetailDtos);
+        return new Result(true, StatusCode.SUCCESS, "Fetch all liked property", new PropertyOverviewPageDto(
+                pageData,
+                propertyDetailDtos
+        ));
     }
 }
