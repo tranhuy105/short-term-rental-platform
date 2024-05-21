@@ -19,4 +19,6 @@ public interface PropertyOverviewProjection {
         List<ImageDto> getImages();
 
         BigDecimal getAverageRating();
+
+        Long getTotalProperty();
 }

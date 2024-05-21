@@ -23,10 +23,10 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
     Optional<Property> findById(@NonNull Long id);
 
     @Query(value = """
-            SELECT p 
+            SELECT p
             FROM Property p
-            LEFT JOIN FETCH p.images 
-            JOIN p.likedByUsers u 
+            LEFT JOIN FETCH p.images
+            JOIN FETCH p.likedByUsers u
             WHERE u.id = :userId""")
     List<Property> getLikedByUserId(Integer userId);
 
@@ -40,13 +40,13 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
     @Query(value = """
                 SELECT DISTINCT p FROM Property p
                 LEFT JOIN FETCH p.images
-                LEFT JOIN FETCH p.host h 
+                LEFT JOIN FETCH p.host h
                 LEFT JOIN FETCH h.avatar
-                WHERE p.id = :id """)
+                WHERE p.id = :id""")
     Optional<Property> findDetailById(@NonNull Long id);
 
     @Query(value = """
-        SELECT p FROM Property p 
+        SELECT p FROM Property p
         LEFT JOIN FETCH p.images 
         WHERE (:category1 IS NULL OR :category1 MEMBER OF p.categories)
         AND (:category2 IS NULL OR :category2 MEMBER OF p.categories)
@@ -77,8 +77,8 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
                                  );
 
     @Query(value = """
-            SELECT 
-                AVG(c.rating) AS averageRating, 
+            SELECT
+                AVG(c.rating) AS averageRating,
                 COUNT(*) AS totalRating
             FROM comment c
             WHERE c.property_id = :propertyId

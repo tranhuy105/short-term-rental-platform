@@ -2,13 +2,11 @@ package com.huy.airbnbserver.comment;
 
 import com.huy.airbnbserver.comment.converter.CommentDtoToCommentConverter;
 import com.huy.airbnbserver.comment.converter.CommentToCommentDtoConverter;
-import com.huy.airbnbserver.system.Result;
-import com.huy.airbnbserver.system.SortDirection;
-import com.huy.airbnbserver.system.StatusCode;
-import com.huy.airbnbserver.system.Utils;
+import com.huy.airbnbserver.comment.dto.CommentDto;
+import com.huy.airbnbserver.comment.dto.CommentsWithPaginationDto;
+import com.huy.airbnbserver.system.*;
 import com.huy.airbnbserver.system.exception.InvalidSearchQueryException;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -51,15 +49,22 @@ public class CommentController {
             }
         }
 
-        List<CommentDto> commentDtoList = commentService.findByPropertyId(propertyId, page, pageSize, sortDirection)
+        int _page = page == null ? 1 : page;
+        int _pageSize = pageSize == null ? 2 : pageSize;
+
+        List<CommentDto> commentDtoList = commentService.findByPropertyId(propertyId, _page, _pageSize, sortDirection)
                 .stream()
                 .map(commentToCommentDtoConverter::convert)
                 .toList();
+
+        Long totalComment = commentService.getTotalCommentOfProperty(propertyId);
+        PageMetadata pageMetadata = new PageMetadata((long)_page, (long)_pageSize, totalComment);
+
         return new Result(
                 true,
                 StatusCode.SUCCESS,
                 "Fetch Comments Success",
-                commentDtoList
+                new CommentsWithPaginationDto(pageMetadata, commentDtoList)
         );
     }
 

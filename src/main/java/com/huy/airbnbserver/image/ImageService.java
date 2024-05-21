@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -25,7 +26,7 @@ public class ImageService {
 
         for (MultipartFile file : files) {
             var saveImage = Image.builder()
-                    .name(file.getOriginalFilename())
+                    .name(LocalDateTime.now()+"-"+file.getOriginalFilename())
                     .imageData(ImageUtils.compressImage(file, 0.2F))
                     .build();
             savedImages.add(saveImage);

@@ -10,6 +10,7 @@ public class BookingToBookingDtoConverter implements Converter<Booking, BookingD
     @Override
     public BookingDto convert(Booking source) {
         return new BookingDto(
+                source.getProperty().getId(),
                 source.getId(),
                 source.getCheckInDate(),
                 source.getCheckOutDate(),

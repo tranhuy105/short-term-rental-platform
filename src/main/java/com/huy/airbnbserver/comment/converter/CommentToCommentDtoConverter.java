@@ -1,7 +1,7 @@
 package com.huy.airbnbserver.comment.converter;
 
 import com.huy.airbnbserver.comment.Comment;
-import com.huy.airbnbserver.comment.CommentDto;
+import com.huy.airbnbserver.comment.dto.CommentDto;
 import com.huy.airbnbserver.user.converter.UserToUserDtoConverter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.convert.converter.Converter;

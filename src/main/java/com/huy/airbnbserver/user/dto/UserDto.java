@@ -18,8 +18,8 @@ public record UserDto(
     @Email(message = "invalid email")
     String email,
     boolean enabled,
-    Date createdAt,
-    Date updatedAt,
+    Date created_at,
+    Date updated_at,
     ImageDto avatar
 ) {
 }

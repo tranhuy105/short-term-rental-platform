@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -39,6 +40,12 @@ public class PropertyService {
         return mapToProperty(res.get(0));
     }
 
+    public void existCheck(Long id) {
+        propertyRepository.findById(id).orElseThrow(
+                () -> new ObjectNotFoundException("property", id)
+        );
+    }
+
     @Transactional
     public Property save(Property property, Integer userId, List<MultipartFile> images) throws IOException {
         User user = userRepository.findById(userId)
@@ -47,7 +54,7 @@ public class PropertyService {
         if (images != null) {
             for (MultipartFile image : images) {
                 var saveImage = Image.builder()
-                        .name(image.getOriginalFilename())
+                        .name(LocalDateTime.now()+"-"+image.getOriginalFilename())
                         .imageData(ImageUtils.compressImage(image, 0.3F))
                         .property(property)
                         .build();
@@ -71,7 +78,7 @@ public class PropertyService {
         if (images != null) {
             for (MultipartFile image : images) {
                 var saveImage = Image.builder()
-                        .name(image.getOriginalFilename())
+                        .name(LocalDateTime.now()+"-"+image.getOriginalFilename())
                         .imageData(ImageUtils.compressImage(image, 0.3F))
                         .property(savedProperty)
                         .build();
@@ -114,7 +121,7 @@ public class PropertyService {
         if (images != null) {
             for (MultipartFile image : images) {
                 var saveImage = Image.builder()
-                        .name(image.getOriginalFilename())
+                        .name(LocalDateTime.now()+"-"+image.getOriginalFilename())
                         .imageData(ImageUtils.compressImage(image, 0.3F))
                         .property(savedProperty)
                         .build();
@@ -173,8 +180,8 @@ public class PropertyService {
             Integer minBeds,
             Integer minBathrooms,
             Integer minBedrooms,
-            Integer page,
-            Integer pageSize,
+            int page,
+            int pageSize,
             SortColumn sortColumn,
             SortDirection sortDirection
     ) {
@@ -187,9 +194,9 @@ public class PropertyService {
         String _category2 = category2 == null ? null : category2.name();
         String _tag = tag == null ? null : tag.name();
 
-        int _page = page == null ? 1 : page;
-        int _limit = pageSize == null ? 5 : pageSize;
-        long offset = ((long) (_page - 1) * _limit);
+        long _limit;
+        _limit = pageSize;
+        long offset = ((long) (page - 1) * _limit);
 
         List<Object[]> results = nativePropertyRepository.findAllNative(
                 sortColumn.name(),
@@ -207,7 +214,7 @@ public class PropertyService {
                 minBeds,
                 minBathrooms,
                 minBedrooms,
-                (long) _limit,
+                _limit,
                 offset
         );
 
@@ -285,6 +292,10 @@ public class PropertyService {
             @Override
             public BigDecimal getAverageRating() {
                 return (BigDecimal) result[10];
+            }
+
+            public Long getTotalProperty() {
+                return (Long) result[11];
             }
         };
     }

@@ -30,12 +30,12 @@ public class CommentService {
     }
 
     public List<Comment> findByPropertyId(Long propertyId,
-                                          Integer page,
-                                          Integer pageSize,
+                                          int page,
+                                          int pageSize,
                                           SortDirection sortDirection) {
-        int _page = page == null ? 1 : page;
-        int _limit = pageSize == null ? 1 : pageSize;
-        int offset = (_page - 1) * _limit;
+        int _limit = pageSize;
+        int offset = (page - 1) * pageSize;
+        propertyService.existCheck(propertyId);
 
         if (sortDirection == SortDirection.DESC) {
             return commentRepository.findAllByPropertyIdNativeDesc(propertyId, _limit,
@@ -57,6 +57,10 @@ public class CommentService {
         }
 
         commentRepository.delete(deletedComment);
+    }
+
+    public Long getTotalCommentOfProperty(Long propertyId) {
+       return commentRepository.findTotalComment(propertyId);
     }
 
     public Comment updateComment(Comment comment,Long commentId, Integer userId) {

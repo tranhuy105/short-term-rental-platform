@@ -52,6 +52,14 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     @Query(value = """
             SELECT
+                COUNT(c.id)
+            FROM comment c
+            WHERE c.property_id = :propertyId
+                """, nativeQuery = true)
+    Long findTotalComment(@NonNull Long propertyId);
+
+    @Query(value = """
+            SELECT
                 c.id,
                 c.content,
                 c.rating,

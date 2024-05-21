@@ -1,4 +1,4 @@
-package com.huy.airbnbserver.comment;
+package com.huy.airbnbserver.comment.dto;
 
 import com.huy.airbnbserver.user.dto.UserDto;
 import jakarta.validation.constraints.*;

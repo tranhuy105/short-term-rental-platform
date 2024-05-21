@@ -11,7 +11,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
-public class PropertyDtoToPropertyConverter implements Converter<PropertyDetailDto, Property> {
+public class PropertyDetailDtoToPropertyConverter implements Converter<PropertyDetailDto, Property> {
     @Override
     public Property convert(PropertyDetailDto source) {
         var p = new Property();

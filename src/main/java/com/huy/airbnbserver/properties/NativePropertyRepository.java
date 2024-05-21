@@ -35,7 +35,8 @@ public class NativePropertyRepository {
             p.num_beds AS numBeds,
             GROUP_CONCAT(DISTINCT i.id) AS imageIds,
             GROUP_CONCAT(DISTINCT i.name) AS imageNames,
-            COALESCE(AVG(c.rating), 0) AS averageRating
+            COALESCE(AVG(c.rating), 0) AS averageRating,
+            COUNT(*) OVER()
         FROM property p
         LEFT JOIN image i ON p.id = i.property_id
         LEFT JOIN comment c ON p.id = c.property_id

@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 public record BookingDto(
+        Long property_id,
         Long id,
         @Future @NotNull
         Date check_in_date,

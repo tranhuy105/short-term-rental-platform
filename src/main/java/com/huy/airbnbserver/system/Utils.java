@@ -69,7 +69,10 @@ public class Utils {
 
         for (MultipartFile image : images) {
             if (image.getSize() > 2 * 1024 * 1024) {
-                throw new FileSizeLimitExceededException("File size is too large for: " + image.getOriginalFilename(), image.getSize(), 2 * 1024 * 1024);
+                throw new FileSizeLimitExceededException(
+                        "File size is too large for: " + image.getOriginalFilename(),
+                        image.getSize(),
+                        2 * 1024 * 1024);
             }
         }
 

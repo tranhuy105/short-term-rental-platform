@@ -1,15 +1,12 @@
 package com.huy.airbnbserver.properties;
 
+import com.huy.airbnbserver.properties.converter.PropertyOverProjectionToPropertyOverProjectionDto;
+import com.huy.airbnbserver.properties.dto.*;
 import com.huy.airbnbserver.properties.enm.*;
-import com.huy.airbnbserver.properties.converter.PropertyDtoToPropertyConverter;
-import com.huy.airbnbserver.properties.converter.PropertyToPropertyDtoConverter;
+import com.huy.airbnbserver.properties.converter.PropertyDetailDtoToPropertyConverter;
+import com.huy.airbnbserver.properties.converter.PropertyToPropertyDetailDtoConverter;
 import com.huy.airbnbserver.properties.converter.PropertyToPropertyOverviewDto;
-import com.huy.airbnbserver.properties.dto.PropertyDetailDto;
-import com.huy.airbnbserver.properties.dto.PropertyOverviewDto;
-import com.huy.airbnbserver.system.Result;
-import com.huy.airbnbserver.system.SortDirection;
-import com.huy.airbnbserver.system.StatusCode;
-import com.huy.airbnbserver.system.Utils;
+import com.huy.airbnbserver.system.*;
 import com.huy.airbnbserver.system.exception.InvalidSearchQueryException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -30,9 +27,10 @@ import java.util.List;
 @RequestMapping("/api/v1")
 public class PropertyController {
     private final PropertyService propertyService;
-    private final PropertyToPropertyDtoConverter propertyToPropertyDtoConverter;
-    private final PropertyDtoToPropertyConverter propertyDtoToPropertyConverter;
+    private final PropertyToPropertyDetailDtoConverter propertyToPropertyDetailDtoConverter;
+    private final PropertyDetailDtoToPropertyConverter propertyDetailDtoToPropertyConverter;
     private final PropertyToPropertyOverviewDto propertyToPropertyOverviewDto;
+    private final PropertyOverProjectionToPropertyOverProjectionDto propertyOverProjectionToPropertyOverProjectionDto;
 
     @GetMapping("/properties/{propertyId}")
     public Result findById(@NotNull @PathVariable Long propertyId) {
@@ -40,7 +38,7 @@ public class PropertyController {
                 true,
                 StatusCode.SUCCESS,
                 "Fetch successful",
-                propertyToPropertyDtoConverter.convert(propertyService.findById(propertyId))
+                propertyToPropertyDetailDtoConverter.convert(propertyService.findById(propertyId))
         );
     }
 
@@ -121,24 +119,40 @@ public class PropertyController {
                 );
             }
         }
+
+        int _page = page == null ? 1 : page;
+        int _pageSize = pageSize == null ? 5 : pageSize;
+
+        List<PropertyOverviewProjection> properties = propertyService
+                .findAll(category1,
+                        category2,
+                        tag,
+                        area,
+                        minNightlyPrice,
+                        maxNightlyPrice,
+                        minBeds,
+                        minBathrooms,
+                        minBedrooms,
+                        _page,
+                        _pageSize,
+                        sortColumn,
+                        sortDirection);
+
+
+        Long totalProperty = properties.isEmpty() ? 0 : properties.get(0).getTotalProperty();
+        PageMetadata pageData = new PageMetadata((long)_page, (long)_pageSize, totalProperty);
+
         return new Result(
                         true,
                         200,
                         "Fetch",
-                        propertyService
-                                .findAll(category1,
-                                        category2,
-                                        tag,
-                                        area,
-                                        minNightlyPrice,
-                                        maxNightlyPrice,
-                                        minBeds,
-                                        minBathrooms,
-                                        minBedrooms,
-                                        page,
-                                        pageSize,
-                                        sortColumn,
-                                        sortDirection)
+                        new PropertyOverviewPageDto(
+                                pageData,
+                                properties
+                                        .stream()
+                                        .map(propertyOverProjectionToPropertyOverProjectionDto::convert)
+                                        .toList()
+                        )
                 );
     }
 
@@ -153,7 +167,7 @@ public class PropertyController {
         }
 
 
-        Property property = propertyDtoToPropertyConverter.convert(propertyDetailDto);
+        Property property = propertyDetailDtoToPropertyConverter.convert(propertyDetailDto);
 
 
         assert property != null;
@@ -162,7 +176,7 @@ public class PropertyController {
         return new Result(true,
                 StatusCode.CREATED,
                 "Created Property Success",
-                propertyToPropertyDtoConverter.convert(savedProperty));
+                propertyToPropertyDetailDtoConverter.convert(savedProperty));
     }
 
     @PutMapping("/properties/{propertyId}")
@@ -177,8 +191,8 @@ public class PropertyController {
 
         return new Result(
                 true, 200, "Update Success",
-                propertyToPropertyDtoConverter.convert(
-                propertyService.update(propertyId, propertyDtoToPropertyConverter.convert(propertyDetailDto), images))
+                propertyToPropertyDetailDtoConverter.convert(
+                propertyService.update(propertyId, propertyDetailDtoToPropertyConverter.convert(propertyDetailDto), images))
         );
 
     }
@@ -193,7 +207,7 @@ public class PropertyController {
 
         return new Result(
                 true, 200, "Update Images Success",
-                propertyToPropertyDtoConverter.convert(
+                propertyToPropertyDetailDtoConverter.convert(
                         propertyService.updateImages(propertyId, images))
         );
     }

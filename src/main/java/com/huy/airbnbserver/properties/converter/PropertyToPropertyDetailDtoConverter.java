@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 
 @Component
 @AllArgsConstructor
-public class PropertyToPropertyDtoConverter implements Converter<Property, PropertyDetailDto> {
+public class PropertyToPropertyDetailDtoConverter implements Converter<Property, PropertyDetailDto> {
     private final ImageToImageDtoConverter imageToImageDtoConverter;
     private final UserToUserDtoConverter userToUserDtoConverter;
     private final PropertyRepository propertyRepository;
