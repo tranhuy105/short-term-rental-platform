@@ -1,10 +1,7 @@
 package com.huy.airbnbserver.properties;
 
 import com.huy.airbnbserver.properties.enm.Area;
-import com.huy.airbnbserver.properties.enm.Category;
-import com.huy.airbnbserver.properties.enm.Tag;
 import com.huy.airbnbserver.properties.dto.ReviewInfoProjection;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -62,36 +59,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
                 WHERE p.id = :id""")
     Optional<Property> findDetailById(@NonNull Long id);
 
-    @Query(value = """
-        SELECT p FROM Property p
-        LEFT JOIN FETCH p.images 
-        WHERE (:category1 IS NULL OR :category1 MEMBER OF p.categories)
-        AND (:category2 IS NULL OR :category2 MEMBER OF p.categories)
-        AND (:tag IS NULL OR p.tag = :tag)
-        AND (:area IS NULL OR 
-            (p.longitude BETWEEN :minLongitude AND :maxLongitude) AND
-            (p.latitude BETWEEN :minLatitude AND :maxLatitude))
-        AND (:minNightlyPrice IS NULL OR :maxNightlyPrice IS NULL OR
-            p.nightlyPrice BETWEEN :minNightlyPrice AND :maxNightlyPrice)
-        AND (:minBeds IS NULL OR p.numBeds >= :minBeds)
-        AND (:minBathrooms IS NULL OR p.numBathrooms >= :minBathrooms)
-        AND (:minBedrooms IS NULL OR p.numBedrooms >= :minBedrooms)  
-        """)
-    List<Property> findAllCustom(@Nullable Category category1,
-                                 @Nullable Category category2,
-                                 @Nullable Tag tag,
-                                 @Nullable Area area,
-                                 @Nullable Double minLongitude,
-                                 @Nullable Double maxLongitude,
-                                 @Nullable Double minLatitude,
-                                 @Nullable Double maxLatitude,
-                                 @Nullable Double minNightlyPrice,
-                                 @Nullable Double maxNightlyPrice,
-                                 @Nullable Integer minBeds,
-                                 @Nullable Integer minBathrooms,
-                                 @Nullable Integer minBedrooms,
-                                 @NonNull Pageable pageable
-                                 );
+
 
     @Query(value = """
             SELECT
@@ -102,6 +70,29 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
             GROUP BY c.property_id""", nativeQuery = true)
     ReviewInfoProjection findAverageRatingForProperty(@Param("propertyId") Long propertyId);
 
+    @Query(value = """
+        SELECT
+            p.id AS id,
+            p.nightly_price AS nightlyPrice,
+            p.name AS name,
+            p.longitude AS longitude,
+            p.latitude AS latitude,
+            p.created_at AS createdAt,
+            p.updated_at AS updatedAt,
+            p.num_beds AS numBeds,
+            GROUP_CONCAT(DISTINCT i.id) AS imageIds,
+            GROUP_CONCAT(DISTINCT i.name) AS imageNames,
+            COALESCE(AVG(c.rating), 0) AS averageRating,
+            COUNT(*) OVER()
+        FROM property p
+        LEFT JOIN image i ON p.id = i.property_id
+        LEFT JOIN comment c ON p.id = c.property_id
+        WHERE p.host_id = :userId
+        GROUP BY p.id
+        ORDER BY averageRating DESC
+        LIMIT 9
+    """, nativeQuery = true)
+    List<Object[]> findTopRatingPropertyFromHost(@NonNull Integer userId);
 
     @NonNull
     @Query(value = """

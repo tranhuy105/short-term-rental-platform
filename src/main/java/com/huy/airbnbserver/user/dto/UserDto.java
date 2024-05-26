@@ -2,11 +2,14 @@ package com.huy.airbnbserver.user.dto;
 
 import com.huy.airbnbserver.image.Image;
 import com.huy.airbnbserver.image.ImageDto;
+import com.huy.airbnbserver.properties.Property;
+import com.huy.airbnbserver.properties.dto.PropertyOverviewProjectionDto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
 import java.util.Date;
+import java.util.List;
 
 public record UserDto(
     Integer id,

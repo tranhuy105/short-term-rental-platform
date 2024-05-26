@@ -178,6 +178,13 @@ public class PropertyService {
                 .toList();
     }
 
+    public List<PropertyOverviewProjection> findTopRatingPropertiesForHost(Integer userId) {
+        return propertyRepository.findTopRatingPropertyFromHost(userId)
+                .stream()
+                .map(this::mapToPropertyOverviewProjection)
+                .toList();
+    }
+
     public List<PropertyOverviewProjection> findAll(
             Category category1,
             Category category2,

@@ -1,6 +1,7 @@
 package com.huy.airbnbserver.user.converter;
 
 import com.huy.airbnbserver.image.converter.ImageToImageDtoConverter;
+import com.huy.airbnbserver.properties.PropertyService;
 import com.huy.airbnbserver.user.User;
 import com.huy.airbnbserver.user.dto.UserDto;
 import lombok.AllArgsConstructor;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Component;
 @AllArgsConstructor
 public class UserToUserDtoConverter implements Converter<User, UserDto> {
     private final ImageToImageDtoConverter imageToImageDtoConverter;
+    private final PropertyService propertyService;
 
     @Override
     public UserDto convert(User source) {

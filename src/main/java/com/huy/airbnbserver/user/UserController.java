@@ -1,11 +1,14 @@
 package com.huy.airbnbserver.user;
 
 
+import com.huy.airbnbserver.properties.PropertyService;
+import com.huy.airbnbserver.properties.converter.PropertyOverProjectionToPropertyOverProjectionDto;
 import com.huy.airbnbserver.system.Result;
 import com.huy.airbnbserver.system.StatusCode;
 import com.huy.airbnbserver.system.Utils;
 import com.huy.airbnbserver.user.converter.UserToUserDtoConverter;
 import com.huy.airbnbserver.user.dto.UserDto;
+import com.huy.airbnbserver.user.dto.UserWithPropertyDto;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 
@@ -23,6 +26,8 @@ import java.util.List;
 public class UserController {
     private final UserService userService;
     private final UserToUserDtoConverter userToUserDtoConverter;
+    private final PropertyService propertyService;
+    private final PropertyOverProjectionToPropertyOverProjectionDto converter;
 
     @Deprecated
     @GetMapping
@@ -39,8 +44,14 @@ public class UserController {
     @GetMapping("/{userId}")
     public Result findUserById(@PathVariable Integer userId) {
         var user = userService.findById(userId);
+        var topProperties = propertyService
+                .findTopRatingPropertiesForHost(userId)
+                .stream()
+                .map(converter::convert)
+                .toList();
         var userDto = userToUserDtoConverter.convert(user);
-        return new Result(true, StatusCode.SUCCESS, "Success", userDto);
+        return new Result(true, StatusCode.SUCCESS, "Success",
+                new UserWithPropertyDto(userDto,topProperties));
     }
 
     @PutMapping("/{userId}")
@@ -50,7 +61,6 @@ public class UserController {
         if (!userId.equals(Utils.extractAuthenticationId(authentication))) {
             return new Result(false,  StatusCode.UNAUTHORIZED, "Action Not Allow For This User");
         }
-
 
         return new Result(
                 true,

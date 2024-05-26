@@ -28,11 +28,11 @@ public class UserService {
                 .orElseThrow(()->new ObjectNotFoundException("user", id));
     }
 
+
     public User update(Integer userId, UserDto update){
         var oldUser = userRepository.findById(userId).orElseThrow(()->new ObjectNotFoundException("user", userId));
         oldUser.setFirstname(update.firstname());
         oldUser.setLastname(update.lastname());
-        oldUser.setEmail(update.email());
 
         return userRepository.save(oldUser);
     }

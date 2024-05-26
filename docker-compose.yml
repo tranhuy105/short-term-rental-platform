@@ -1,5 +1,6 @@
 services:
   app:
+    container_name: airbnb_server
     image: tranhuy105/airbnb-clone:latest
     build:
       context: .
@@ -36,6 +37,8 @@ services:
     ports:
       - 1080:1080
       - 1025:1025
+    networks:
+      - app-network
 networks:
   app-network:
     driver: bridge

@@ -78,13 +78,17 @@ public class AuthenticationService {
 
 
     @Transactional
-    public String activate(String token) throws MessagingException {
+    public String activate(String token) {
         Token savedToken = tokenRepository.findByToken(token).orElseThrow(
-                () -> new ObjectNotFoundException("token", "token")
+                () -> new ObjectNotFoundException("token", token)
         );
 
         if (LocalDateTime.now().isAfter(savedToken.getExpiresAt())) {
-            sendValidationEmail(savedToken.getUser());
+            try {
+                sendValidationEmail(savedToken.getUser());
+            } catch (MessagingException e) {
+                throw new RuntimeException(e);
+            }
             tokenRepository.delete(savedToken);
             return "Token has expired, a new token has been sent for this email!";
         }
