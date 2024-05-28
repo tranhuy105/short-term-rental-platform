@@ -1,6 +1,6 @@
 package com.huy.airbnbserver.user;
 
-import com.huy.airbnbserver.image.ImageService;
+import com.huy.airbnbserver.image.firebase.FirebaseImageService;
 import com.huy.airbnbserver.system.exception.ObjectNotFoundException;
 import com.huy.airbnbserver.user.dto.UserDto;
 import jakarta.transaction.Transactional;
@@ -16,7 +16,7 @@ import java.util.List;
 @AllArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
-    private final ImageService imageService;
+    private final FirebaseImageService firebaseImageService;
 
     public List<User> findAll() {
         return userRepository.findAll();
@@ -50,10 +50,11 @@ public class UserService {
         var user = userRepository.findById(id).orElseThrow(()->new ObjectNotFoundException("user", id));
         // remove current image
         if (user.getAvatar() != null) {
-            imageService.deleteById(user.getAvatar().getId());
+            firebaseImageService.delete(user.getAvatar());
         }
-        var images = imageService.upload(files);
-        user.setAvatar(images.get(0));
+
+        var image = firebaseImageService.save(files.get(0), null);
+        user.setAvatar(image);
         userRepository.save(user);
     }
 }

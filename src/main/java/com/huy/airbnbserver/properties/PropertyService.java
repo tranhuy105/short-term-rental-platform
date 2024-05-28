@@ -3,7 +3,7 @@ package com.huy.airbnbserver.properties;
 import com.huy.airbnbserver.image.Image;
 import com.huy.airbnbserver.image.ImageDto;
 import com.huy.airbnbserver.image.ImageRepository;
-import com.huy.airbnbserver.image.ImageUtils;
+import com.huy.airbnbserver.image.firebase.FirebaseImageService;
 import com.huy.airbnbserver.properties.enm.*;
 import com.huy.airbnbserver.properties.dto.PropertyOverviewProjection;
 import com.huy.airbnbserver.system.SortDirection;
@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 public class PropertyService {
     private final PropertyRepository propertyRepository;
     private final UserRepository userRepository;
+    private final FirebaseImageService firebaseImageService;
     private final ImageRepository imageRepository;
     private final NativePropertyRepository nativePropertyRepository;
 
@@ -53,11 +54,7 @@ public class PropertyService {
         List<Image> savedImages = new ArrayList<>();
         if (images != null) {
             for (MultipartFile image : images) {
-                var saveImage = Image.builder()
-                        .name(LocalDateTime.now()+"-"+image.getOriginalFilename())
-                        .imageData(ImageUtils.compressImage(image, 0.3F))
-                        .property(property)
-                        .build();
+                var saveImage = firebaseImageService.save(image, property);
                 savedImages.add(saveImage);
             }
         }
@@ -73,20 +70,19 @@ public class PropertyService {
         Property savedProperty = propertyRepository.findDetailById(propertyId).orElseThrow(
                 () -> new ObjectNotFoundException("property", propertyId)
         );
+
         List<Image> savedImages = new ArrayList<>();
 
         if (images != null) {
             for (MultipartFile image : images) {
-                var saveImage = Image.builder()
-                        .name(LocalDateTime.now()+"-"+image.getOriginalFilename())
-                        .imageData(ImageUtils.compressImage(image, 0.3F))
-                        .property(savedProperty)
-                        .build();
+                Image saveImage = firebaseImageService.save(image, savedProperty);
                 savedImages.add(saveImage);
             }
         }
 
-        imageRepository.deleteAll(savedProperty.getImages());
+        for (Image image: savedProperty.getImages()) {
+            firebaseImageService.delete(image);
+        }
 
         for (Category category : new HashSet<>(savedProperty.getCategories())) {
             savedProperty.removeCategory(category);
@@ -95,6 +91,7 @@ public class PropertyService {
         for (Category category : property.getCategories()) {
             savedProperty.addCategory(category);
         }
+
 
         savedProperty.setImages(savedImages);
         savedProperty.setTag(property.getTag());
@@ -108,29 +105,6 @@ public class PropertyService {
         savedProperty.setLatitude(property.getLatitude());
         savedProperty.setDescription(property.getDescription());
         savedProperty.setAddressLine(property.getAddressLine());
-        return propertyRepository.save(savedProperty);
-    }
-
-    @Transactional
-    public Property updateImages(Long propertyId, List<MultipartFile> images) throws IOException {
-        var savedProperty = propertyRepository.findDetailById(propertyId).orElseThrow(
-                () -> new ObjectNotFoundException("property", propertyId)
-        );
-        List<Image> savedImages = new ArrayList<>();
-
-        if (images != null) {
-            for (MultipartFile image : images) {
-                var saveImage = Image.builder()
-                        .name(LocalDateTime.now()+"-"+image.getOriginalFilename())
-                        .imageData(ImageUtils.compressImage(image, 0.3F))
-                        .property(savedProperty)
-                        .build();
-                savedImages.add(saveImage);
-            }
-        }
-
-        imageRepository.deleteAll(savedProperty.getImages());
-        savedProperty.setImages(savedImages);
         return propertyRepository.save(savedProperty);
     }
 
@@ -281,21 +255,22 @@ public class PropertyService {
             @Override
             public List<ImageDto> getImages() {
                 String[] imageIds;
+                String[] imageUrls;
                 String[] imageNames;
-                if (result[8] != null && result[9] != null) {
+                if (result[8] != null && result[9] != null && result[10] != null) {
                     imageIds = ((String) result[8]).split(",");
-                    imageNames = ((String) result[9]).split(",");
+                    imageUrls = ((String) result[9]).split(",");
+                    imageNames = ((String) result[10]).split(",");
                 } else {
                     imageIds = new String[0];
+                    imageUrls = new String[0];
                     imageNames = new String[0];
                 }
                 List<ImageDto> images = new ArrayList<>();
                 for (int i = 0; i < imageIds.length; i++) {
-                    var id = Long.parseLong(imageIds[i]);
-
                     ImageDto image = new ImageDto(
                             imageNames[i],
-                            "/api/v1/images/"+id
+                            imageUrls[i]
 
                     );
 
@@ -306,11 +281,11 @@ public class PropertyService {
 
             @Override
             public BigDecimal getAverageRating() {
-                return (BigDecimal) result[10];
+                return (BigDecimal) result[11];
             }
 
             public Long getTotalProperty() {
-                return (Long) result[11];
+                return (Long) result[12];
             }
         };
     }
@@ -334,39 +309,43 @@ public class PropertyService {
         User host = new User();
         host.setFirstname((String) result[13]);
         host.setLastname((String) result[14]);
-        host.setId((Integer) result[21]);
-        host.setEmail((String) result[22]);
-        host.setEnabled((boolean) result[23]);
-        host.setCreatedAt((Date) result[24]);
-        host.setUpdatedAt((Date) result[25]);
+        host.setId((Integer) result[22]);
+        host.setEmail((String) result[23]);
+        host.setEnabled((boolean) result[24]);
+        host.setCreatedAt((Date) result[25]);
+        host.setUpdatedAt((Date) result[26]);
 
         if (result[15] != null) {
             Image avatar = new Image();
-            avatar.setId((Long) result[15]);
+            avatar.setUrl((String) result[15]);
             avatar.setName((String) result[16]);
             host.setAvatar(avatar);
         }
         property.setHost(host);
 
         String[] imageIds;
+        String[] imageUrls;
         String[] imageNames;
         if (result[17] != null) {
             imageIds = ((String) result[17]).split(",");
-            imageNames = ((String) result[18]).split(",");
+            imageUrls = ((String) result[18]).split(",");
+            imageNames = ((String) result[19]).split(",");
         } else {
             imageIds = new String[0];
+            imageUrls = new String[0];
             imageNames = new String[0];
         }
         for (int i = 0; i < imageIds.length; i++) {
             Image image = new Image();
+            image.setUrl(imageUrls[i]);
             image.setId(Long.parseLong(imageIds[i]));
             image.setName(imageNames[i]);
             property.getImages().add(image);
         }
 
         String[] categories;
-        if (result[19] != null) {
-            categories = ((String) result[19]).split(",");
+        if (result[20] != null) {
+            categories = ((String) result[20]).split(",");
         } else {
             categories = new String[0];
         }
@@ -375,8 +354,8 @@ public class PropertyService {
                 .collect(Collectors.toSet());
         property.setCategories(categorySet);
 
-        if (result[20] != null) {
-            property.setTag(Tag.valueOf((String) result[20]));
+        if (result[21] != null) {
+            property.setTag(Tag.valueOf((String) result[21]));
         } else {
             property.setTag(null);
         }

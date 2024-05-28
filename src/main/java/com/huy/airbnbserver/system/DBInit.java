@@ -1,20 +1,11 @@
 package com.huy.airbnbserver.system;
 
-import com.huy.airbnbserver.image.Image;
-import com.huy.airbnbserver.image.ImageRepository;
-import com.huy.airbnbserver.image.ImageService;
-import com.huy.airbnbserver.properties.Property;
+
 import com.huy.airbnbserver.properties.PropertyService;
-import com.huy.airbnbserver.user.User;
 import com.huy.airbnbserver.user.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
-
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 @Component
 @AllArgsConstructor

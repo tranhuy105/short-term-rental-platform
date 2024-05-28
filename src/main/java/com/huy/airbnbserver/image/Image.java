@@ -22,10 +22,7 @@ public class Image {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
-
-    @Lob
-    @Column(columnDefinition = "MEDIUMBLOB")
-    private byte[] imageData;
+    private String url;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "property_id", nullable = true)

@@ -197,23 +197,6 @@ public class PropertyController {
     }
 
 
-
-    // TODO: Authorized user
-    @PutMapping("/properties/{propertyId}/images")
-    public Result updateImages(@RequestParam(value = "images") List<MultipartFile> images,
-                         @PathVariable Long propertyId,
-                         Authentication authentication) throws IOException {
-        if (images != null && Utils.imageValidationFailed(images)) {
-            return new Result(false, StatusCode.INVALID_ARGUMENT, "Invalid image files were provided", null);
-        }
-
-        return new Result(
-                true, 200, "Update Images Success",
-                propertyToPropertyDetailDtoConverter.convert(
-                        propertyService.updateImages(propertyId, images))
-        );
-    }
-
     @DeleteMapping("/properties/{propertyId}")
     public Result delete(@Valid @PathVariable Long propertyId, Authentication authentication) {
         propertyService.delete(propertyId, Utils.extractAuthenticationId(authentication));

@@ -40,7 +40,7 @@ public class BookingController {
         return new Result(
                 true,
                 StatusCode.SUCCESS,
-                "new booking pending...",
+                "New booking pending...",
                 bookingToBookingDtoConverter.convert(savedBooking)
         );
     }

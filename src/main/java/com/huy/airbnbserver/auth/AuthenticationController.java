@@ -35,8 +35,13 @@ public class AuthenticationController {
     @GetMapping("/activate")
     public Result activate(
             @RequestParam("token") String token
-    ) throws MessagingException {
-        return new Result(true, 200, "Transaction done", authenticationService.activate(token));
+    ) {
+        String res = authenticationService.activate(token);
+        int code = 200;
+        if (res.equals("Token has expired, a new token has been sent for this email!")) {
+            code = 201;
+        }
+        return new Result(true, code, "Transaction done", authenticationService.activate(token));
     }
 
     @GetMapping("/resend-token")

@@ -11,7 +11,7 @@ public class ImageToImageDtoConverter implements Converter<Image, ImageDto> {
     public ImageDto convert(Image source) {
         return new ImageDto(
                 source.getName(),
-                "/api/v1/images/"+source.getId()
+                source.getUrl()
         );
     }
 }

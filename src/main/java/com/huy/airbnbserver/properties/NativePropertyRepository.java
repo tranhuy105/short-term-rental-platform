@@ -34,6 +34,7 @@ public class NativePropertyRepository {
             p.updated_at AS updatedAt,
             p.num_beds AS numBeds,
             GROUP_CONCAT(DISTINCT i.id) AS imageIds,
+            GROUP_CONCAT(DISTINCT i.url) AS imageUrls,
             GROUP_CONCAT(DISTINCT i.name) AS imageNames,
             COALESCE(AVG(c.rating), 0) AS averageRating,
             COUNT(*) OVER()

@@ -100,7 +100,7 @@ public class AuthenticationService {
         user.setEnabled(true);
         userRepository.save(user);
         tokenRepository.delete(savedToken);
-        return "active success";
+        return "Activated successfully";
     }
 
     @Transactional
@@ -110,7 +110,7 @@ public class AuthenticationService {
         );
 
         if (user.isEnabled()) {
-            return "this user's account has already been activated";
+            return "This user's account has already been activated";
         }
 
         tokenRepository.deleteByUserId(user.getId());
@@ -119,7 +119,7 @@ public class AuthenticationService {
         } catch (MessagingException e) {
             throw new RuntimeException(e);
         }
-        return "token resent! Please check your mail";
+        return "Token resent! Please check your mail";
     }
 
 

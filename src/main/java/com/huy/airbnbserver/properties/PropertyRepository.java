@@ -30,6 +30,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
                 p.updated_at AS updatedAt,
                 p.num_beds AS numBeds,
                 GROUP_CONCAT(DISTINCT i.id) AS imageIds,
+                GROUP_CONCAT(DISTINCT i.url) AS imageUrls,
                 GROUP_CONCAT(DISTINCT i.name) AS imageNames,
                 COALESCE(AVG(c.rating), 0) AS averageRating,
                 COUNT(*) OVER()
@@ -81,6 +82,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
             p.updated_at AS updatedAt,
             p.num_beds AS numBeds,
             GROUP_CONCAT(DISTINCT i.id) AS imageIds,
+            GROUP_CONCAT(DISTINCT i.url) AS imageUrls,
             GROUP_CONCAT(DISTINCT i.name) AS imageNames,
             COALESCE(AVG(c.rating), 0) AS averageRating,
             COUNT(*) OVER()
@@ -106,6 +108,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
             p.updated_at AS updatedAt,
             p.num_beds AS numBeds,
             GROUP_CONCAT(DISTINCT i.id) AS imageIds,
+            GROUP_CONCAT(DISTINCT i.url) AS imageUrls,
             GROUP_CONCAT(DISTINCT i.name) AS imageNames,
             COALESCE(AVG(c.rating), 0) AS averageRating
         FROM property p
@@ -161,9 +164,10 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
             p.updated_at,
             h.firstname AS host_firstname,
             h.lastname AS host_lastname,
-            a.id AS avatar_id,
+            a.url AS avatar_url,
             a.name AS avatar_name,
             GROUP_CONCAT(DISTINCT i.id) AS imageIds,
+            GROUP_CONCAT(DISTINCT i.url) AS imageUrls,
             GROUP_CONCAT(DISTINCT i.name) AS imageNames,
             GROUP_CONCAT(DISTINCT c.categories) AS categories,
             p.tag,
