@@ -27,6 +27,7 @@ public class BookingService {
         var user = userRepository.findById(userId).orElseThrow(()->new ObjectNotFoundException("user", userId));
         var property = propertyRepository.findById(propertyId).orElseThrow(()->new ObjectNotFoundException("property", propertyId));
 
+
         booking.addUser(user);
         booking.addProperty(property);
         booking.setConfirm(false);
@@ -35,20 +36,28 @@ public class BookingService {
     }
 
     @Transactional(readOnly = true)
-    public List<Booking> getAllBookingByUserId(Integer userId) {
+    public List<Booking> getAllBookingByUserId(Integer userId, long limit, long offset) {
         userRepository.findById(userId).orElseThrow(()->new ObjectNotFoundException("user", userId));
-        return bookingRepository.findByUserId(userId);
+        return bookingRepository.findByUserId(userId, limit, offset);
+    }
+
+    public Long getAllBookingByUserIdCount(Integer userId) {
+        return bookingRepository.findTotalByUserId(userId);
+    }
+
+    public Long getAllBookingByPropertyIdCount(Long propertyId) {
+        return bookingRepository.getTotalBookingByPropertyId(propertyId);
     }
 
     @Transactional(readOnly = true)
-    public List<Booking> getAllBookingByPropertyId(Long propertyId, Integer userId) {
+    public List<Booking> getAllBookingByPropertyId(Long propertyId, Integer userId, long limit, long offset) {
         var property = propertyRepository
                 .findById(propertyId)
                 .orElseThrow(()->new ObjectNotFoundException("property", propertyId));
         if (!property.getHost().getId().equals(userId)) {
             throw new AccessDeniedException("Access denied for this user");
         }
-        return bookingRepository.findByPropertyId(propertyId);
+        return bookingRepository.findByPropertyId(propertyId, limit, offset);
     }
 
     @Transactional

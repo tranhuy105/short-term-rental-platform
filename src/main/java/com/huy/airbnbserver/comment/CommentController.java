@@ -4,6 +4,10 @@ import com.huy.airbnbserver.comment.converter.CommentDtoToCommentConverter;
 import com.huy.airbnbserver.comment.converter.CommentToCommentDtoConverter;
 import com.huy.airbnbserver.comment.dto.CommentDto;
 import com.huy.airbnbserver.comment.dto.CommentsWithPaginationDto;
+import com.huy.airbnbserver.properties.Property;
+import com.huy.airbnbserver.report.Issue;
+import com.huy.airbnbserver.report.ReportService;
+import com.huy.airbnbserver.report.dto.ReportDto;
 import com.huy.airbnbserver.system.*;
 import com.huy.airbnbserver.system.exception.InvalidSearchQueryException;
 import jakarta.validation.Valid;
@@ -20,14 +24,15 @@ import java.util.Objects;
 @RequestMapping("/api/v1")
 public class CommentController {
     private final CommentService commentService;
+    private final ReportService reportService;
     private final CommentDtoToCommentConverter commentDtoToCommentConverter;
     private final CommentToCommentDtoConverter commentToCommentDtoConverter;
 
     @GetMapping("/properties/{propertyId}/comments")
     public Result fetchAll(
             @PathVariable Long propertyId,
-            @RequestParam(value = "page", required = false) Integer page,
-            @RequestParam(value = "page_size", required = false) Integer pageSize,
+            @RequestParam(value = "page", required = false) Long page,
+            @RequestParam(value = "page_size", required = false) Long pageSize,
             @RequestParam(value = "sort_direction", required = false) String sortDirectionParam
     ) {
         if (page != null && page < 1) {
@@ -49,16 +54,15 @@ public class CommentController {
             }
         }
 
-        int _page = page == null ? 1 : page;
-        int _pageSize = pageSize == null ? 2 : pageSize;
+        Page pageObject =  new Page(page,pageSize);
 
-        List<CommentDto> commentDtoList = commentService.findByPropertyId(propertyId, _page, _pageSize, sortDirection)
+        List<CommentDto> commentDtoList = commentService.findByPropertyId(propertyId, pageObject.getLimit(), pageObject.getOffset(), sortDirection)
                 .stream()
                 .map(commentToCommentDtoConverter::convert)
                 .toList();
 
         Long totalComment = commentService.getTotalCommentOfProperty(propertyId);
-        PageMetadata pageMetadata = new PageMetadata((long)_page, (long)_pageSize, totalComment);
+        PageMetadata pageMetadata = new PageMetadata(pageObject.getPage(), pageObject.getPageSize(), totalComment);
 
         return new Result(
                 true,
@@ -118,5 +122,23 @@ public class CommentController {
     @GetMapping("/comments/test")
     public Result test() {
         return new Result(true, 200, "ok");
+    }
+
+    @PostMapping("/comments/{commentId}/report")
+    public Result reportComment(@PathVariable Long commentId,
+                                 @Valid @RequestBody ReportDto reportDto,
+                                 Authentication authentication) {
+        Issue issue = Issue.valueOf(reportDto.issue());
+        Comment reportedComment = commentService.findById(commentId);
+
+        reportService.createReport(
+                Utils.extractAuthenticationId(authentication),
+                issue,
+                reportDto.detail(),
+                reportedComment.getEntityId(),
+                reportedComment.getType()
+        );
+
+        return new Result(true, 200, "Success");
     }
 }

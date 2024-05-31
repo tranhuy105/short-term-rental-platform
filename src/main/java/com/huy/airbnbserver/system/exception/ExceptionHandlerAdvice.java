@@ -4,10 +4,6 @@ import com.huy.airbnbserver.system.Result;
 import com.huy.airbnbserver.system.StatusCode;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.SignatureException;
-import jakarta.validation.ConstraintViolationException;
-import org.apache.tomcat.util.http.fileupload.impl.FileCountLimitExceededException;
 import org.apache.tomcat.util.http.fileupload.impl.FileSizeLimitExceededException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -15,6 +11,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
@@ -45,6 +42,12 @@ public class ExceptionHandlerAdvice {
     @ExceptionHandler(UnsupportedImageFormatException.class)
     @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
     Result handleUnsupportedImageFormatException(UnsupportedImageFormatException ex) {
+        return new Result(false, 422, ex.getMessage());
+    }
+
+    @ExceptionHandler(UnprocessableEntityException.class)
+    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+    Result handleUnprocessableEntityException(UnprocessableEntityException ex) {
         return new Result(false, 422, ex.getMessage());
     }
 
@@ -109,6 +112,12 @@ public class ExceptionHandlerAdvice {
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     Result handleAuthenticationException(Exception ex) {
         return new Result(false, StatusCode.UNAUTHORIZED, "Username or password is incorrect", ex.getMessage());
+    }
+
+    @ExceptionHandler(LockedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    Result handleLockedException(LockedException ex) {
+        return new Result(false, StatusCode.FORBIDDEN, ex.getMessage());
     }
 
     @ExceptionHandler(Exception.class)

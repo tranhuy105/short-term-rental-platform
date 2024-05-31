@@ -2,8 +2,9 @@ package com.huy.airbnbserver.user;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.huy.airbnbserver.report.Report;
+import com.huy.airbnbserver.report.ReportableEntity;
 import com.huy.airbnbserver.booking.Booking;
-import com.huy.airbnbserver.comment.Comment;
 import com.huy.airbnbserver.image.Image;
 import com.huy.airbnbserver.properties.Property;
 import jakarta.persistence.*;
@@ -12,7 +13,6 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -26,7 +26,7 @@ import java.util.List;
 @Table(name = "USER_ACCOUNT", indexes = {
         @Index(name = "email_index", columnList = "email")
 })
-public class User {
+public class User implements ReportableEntity {
     @Id
     @Column(nullable = false, updatable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -64,7 +64,8 @@ public class User {
     @Column(updatable = false, nullable = false, length = 100)
     private String roles = "user";
 
-
+    @Column(nullable = false)
+    private boolean isBanned;
 
 
 
@@ -80,6 +81,9 @@ public class User {
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL) @JsonBackReference
     private List<Booking> bookings = new ArrayList<>();
 
+    @OneToMany(mappedBy = "reporter", fetch = FetchType.LAZY, cascade = CascadeType.ALL) @JsonBackReference
+    private List<Report> reports = new ArrayList<>();
+
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH}, fetch = FetchType.LAZY)
     @JoinTable(
             name = "liked_property",
@@ -92,5 +96,15 @@ public class User {
 
     public String getFullname() {
         return firstname + " " + lastname;
+    }
+
+    @Override
+    public Long getEntityId() {
+        return Long.valueOf(this.id);
+    }
+
+    @Override
+    public String getType() {
+        return "User";
     }
 }

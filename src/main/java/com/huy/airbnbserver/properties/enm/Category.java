@@ -20,5 +20,6 @@ public enum Category {
     FIRST_AID_KIT,
     ESSENTIALS,
     SHAMPOO,
-    HANGERS
+    HANGERS,
+    PIANO
 }

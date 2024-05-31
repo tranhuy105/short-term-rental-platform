@@ -1,18 +1,24 @@
 package com.huy.airbnbserver.user;
 
 
+import com.huy.airbnbserver.properties.Property;
 import com.huy.airbnbserver.properties.PropertyService;
 import com.huy.airbnbserver.properties.converter.PropertyOverProjectionToPropertyOverProjectionDto;
+import com.huy.airbnbserver.report.Issue;
+import com.huy.airbnbserver.report.ReportService;
+import com.huy.airbnbserver.report.dto.ReportDto;
 import com.huy.airbnbserver.system.Result;
 import com.huy.airbnbserver.system.StatusCode;
 import com.huy.airbnbserver.system.Utils;
 import com.huy.airbnbserver.user.converter.UserToUserDtoConverter;
 import com.huy.airbnbserver.user.dto.UserDto;
 import com.huy.airbnbserver.user.dto.UserWithPropertyDto;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,8 +34,9 @@ public class UserController {
     private final UserToUserDtoConverter userToUserDtoConverter;
     private final PropertyService propertyService;
     private final PropertyOverProjectionToPropertyOverProjectionDto converter;
+    private final ReportService reportService;
 
-    @Deprecated
+    @PreAuthorize("hasRole('ROLE_admin')")
     @GetMapping
     public Result findAllUsers() {
         List<User> users = userService.findAll();
@@ -70,17 +77,6 @@ public class UserController {
         );
     }
 
-    @DeleteMapping("/{userId}")
-    public Result deleteUser(@PathVariable Integer userId,
-                             Authentication authentication) {
-        if (!userId.equals(Utils.extractAuthenticationId(authentication))) {
-            return new Result(false,  StatusCode.UNAUTHORIZED, "Action Not Allow For This User");
-        }
-
-        userService.delete(userId);
-        return new Result(true, StatusCode.SUCCESS, "Delete Success");
-    }
-
     @PutMapping(path = "/{userId}/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public Result assignAvatar(@PathVariable Integer userId,
                                @NotNull @RequestParam("images") List<MultipartFile> files,
@@ -99,5 +95,23 @@ public class UserController {
 
         userService.assignAvatar(userId, files);
         return new Result(true, 200, "Avatar upload success!");
+    }
+
+    @PostMapping("/{userId}/report")
+    public Result reportUser(@PathVariable Integer userId,
+                                 @Valid @RequestBody ReportDto reportDto,
+                                 Authentication authentication) {
+        Issue issue = Issue.valueOf(reportDto.issue());
+        User reportedUser = userService.findById(userId);
+
+        reportService.createReport(
+                Utils.extractAuthenticationId(authentication),
+                issue,
+                reportDto.detail(),
+                reportedUser.getEntityId(),
+                reportedUser.getType()
+        );
+
+        return new Result(true, 200, "Success");
     }
 }

@@ -6,6 +6,10 @@ import com.huy.airbnbserver.properties.enm.*;
 import com.huy.airbnbserver.properties.converter.PropertyDetailDtoToPropertyConverter;
 import com.huy.airbnbserver.properties.converter.PropertyToPropertyDetailDtoConverter;
 import com.huy.airbnbserver.properties.converter.PropertyToPropertyOverviewDto;
+import com.huy.airbnbserver.report.Issue;
+import com.huy.airbnbserver.report.ReportService;
+import com.huy.airbnbserver.report.ReportableEntity;
+import com.huy.airbnbserver.report.dto.ReportDto;
 import com.huy.airbnbserver.system.*;
 import com.huy.airbnbserver.system.exception.InvalidSearchQueryException;
 import jakarta.validation.Valid;
@@ -29,8 +33,8 @@ public class PropertyController {
     private final PropertyService propertyService;
     private final PropertyToPropertyDetailDtoConverter propertyToPropertyDetailDtoConverter;
     private final PropertyDetailDtoToPropertyConverter propertyDetailDtoToPropertyConverter;
-    private final PropertyToPropertyOverviewDto propertyToPropertyOverviewDto;
     private final PropertyOverProjectionToPropertyOverProjectionDto propertyOverProjectionToPropertyOverProjectionDto;
+    private final ReportService reportService;
 
     @GetMapping("/properties/{propertyId}")
     public Result findById(@NotNull @PathVariable Long propertyId) {
@@ -53,8 +57,8 @@ public class PropertyController {
             @RequestParam(value = "min_bathrooms", required = false) Integer minBathrooms,
             @RequestParam(value = "min_nightly_price", required = false) Double minNightlyPrice,
             @RequestParam(value = "max_nightly_price", required = false) Double maxNightlyPrice,
-            @RequestParam(value = "page", required = false) Integer page,
-            @RequestParam(value = "page_size", required = false) Integer pageSize,
+            @RequestParam(value = "page", required = false) Long page,
+            @RequestParam(value = "page_size", required = false) Long pageSize,
             @RequestParam(value = "sort_column", required = false) String sortColumnParam,
             @RequestParam(value = "sort_direction", required = false) String sortDirectionParam
             ) {
@@ -98,7 +102,7 @@ public class PropertyController {
 
         SortDirection sortDirection;
         if (sortDirectionParam == null) {
-            sortDirection = SortDirection.DESC;
+            sortDirection = SortDirection.ASC;
         } else {
             try {
                 sortDirection = SortDirection.valueOf(sortDirectionParam.toUpperCase());
@@ -120,8 +124,7 @@ public class PropertyController {
             }
         }
 
-        int _page = page == null ? 1 : page;
-        int _pageSize = pageSize == null ? 5 : pageSize;
+        Page pageObject = new Page(page,pageSize);
 
         List<PropertyOverviewProjection> properties = propertyService
                 .findAll(category1,
@@ -133,14 +136,14 @@ public class PropertyController {
                         minBeds,
                         minBathrooms,
                         minBedrooms,
-                        _page,
-                        _pageSize,
+                        pageObject.getLimit(),
+                        pageObject.getOffset(),
                         sortColumn,
                         sortDirection);
 
 
         Long totalProperty = properties.isEmpty() ? 0 : properties.get(0).getTotalProperty();
-        PageMetadata pageData = new PageMetadata((long)_page, (long)_pageSize, totalProperty);
+        PageMetadata pageData = new PageMetadata(pageObject.getPage(), pageObject.getPageSize(), totalProperty);
 
         return new Result(
                         true,
@@ -198,7 +201,7 @@ public class PropertyController {
 
 
     @DeleteMapping("/properties/{propertyId}")
-    public Result delete(@Valid @PathVariable Long propertyId, Authentication authentication) {
+    public Result delete(@Valid @PathVariable Long propertyId, Authentication authentication) throws IOException {
         propertyService.delete(propertyId, Utils.extractAuthenticationId(authentication));
         return new Result(true, StatusCode.SUCCESS, "delete successful");
     }
@@ -235,8 +238,8 @@ public class PropertyController {
     @GetMapping("/users/{userId}/liked-properties")
     public Result getLikedPropertiesByUser(Authentication authentication,
                                            @PathVariable Integer userId,
-                                           @RequestParam(value = "page", required = false) Integer page,
-                                           @RequestParam(value = "page_size", required = false) Integer pageSize) {
+                                           @RequestParam(value = "page", required = false) Long page,
+                                           @RequestParam(value = "page_size", required = false) Long pageSize) {
         if (page != null && page < 1) {
             throw new InvalidSearchQueryException("Page must be greater than zero");
         }
@@ -249,14 +252,13 @@ public class PropertyController {
             throw new AccessDeniedException("Access Denied For This User");
         }
 
-        int _page = page == null ? 1 : page;
-        int _pageSize = pageSize == null ? 5 : pageSize;
+        Page pageObject = new Page(page, pageSize);
 
         var propertyList =  propertyService
-                .getAllLikedPropertiedByUserWithUserId(userId, _page, _pageSize);
+                .getAllLikedPropertiedByUserWithUserId(userId, pageObject.getLimit(), pageObject.getOffset());
 
         Long totalProperty = propertyList.isEmpty() ? 0 : propertyList.get(0).getTotalProperty();
-        PageMetadata pageData = new PageMetadata((long)_page, (long)_pageSize, totalProperty);
+        PageMetadata pageData = new PageMetadata(pageObject.getPage(), pageObject.getPageSize(), totalProperty);
 
         List<PropertyOverviewProjectionDto> propertyDetailDtos = propertyList
                 .stream()
@@ -268,4 +270,23 @@ public class PropertyController {
                 propertyDetailDtos
         ));
     }
-}
+
+    @PostMapping("/properties/{propertyId}/report")
+    public Result reportProperty(@PathVariable Long propertyId,
+                                 @Valid @RequestBody ReportDto reportDto,
+                                 Authentication authentication) {
+        System.out.println(reportDto.detail() +" "+ reportDto.issue());
+        Issue issue = Issue.valueOf(reportDto.issue());
+        Property reportedProperty = propertyService.findByIdLazy(propertyId);
+
+        reportService.createReport(
+                Utils.extractAuthenticationId(authentication),
+                issue,
+                reportDto.detail(),
+                reportedProperty.getEntityId(),
+                reportedProperty.getType()
+        );
+
+        return new Result(true, 200, "Success");
+    }
+ }

@@ -2,6 +2,7 @@
     
     import com.fasterxml.jackson.annotation.JsonBackReference;
     import com.fasterxml.jackson.annotation.JsonManagedReference;
+    import com.huy.airbnbserver.report.ReportableEntity;
     import com.huy.airbnbserver.booking.Booking;
     import com.huy.airbnbserver.comment.Comment;
     import com.huy.airbnbserver.image.Image;
@@ -27,7 +28,7 @@
     @Builder
     @EqualsAndHashCode
     @ToString
-    public class Property{
+    public class Property implements ReportableEntity {
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         @Column(nullable = false, updatable = false)
@@ -135,5 +136,15 @@
 
         public void removeCategory(Category category) {
             this.categories.remove(category);
+        }
+
+        @Override
+        public Long getEntityId() {
+            return this.id;
+        }
+
+        @Override
+        public String getType() {
+            return "Property";
         }
     }

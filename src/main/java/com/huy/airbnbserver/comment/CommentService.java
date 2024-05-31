@@ -22,27 +22,31 @@ public class CommentService {
     private final UserService userService;
 
     public Comment addComment(Comment comment, Long propertyId, Integer userId) {
-        Property property = propertyService.findById(propertyId);
+        Property property = propertyService.findByIdLazy(propertyId);
         User user = userService.findById(userId);
         comment.addProperty(property);
         comment.addUser(user);
         return commentRepository.save(comment);
     }
 
+    public Comment findById(Long id) {
+        return commentRepository.findByIdLazy(id).orElseThrow(
+                () -> new ObjectNotFoundException("comment", id)
+        );
+    }
+
     public List<Comment> findByPropertyId(Long propertyId,
-                                          int page,
-                                          int pageSize,
+                                          long limit,
+                                          long offset,
                                           SortDirection sortDirection) {
-        int _limit = pageSize;
-        int offset = (page - 1) * pageSize;
         propertyService.existCheck(propertyId);
 
         if (sortDirection == SortDirection.DESC) {
-            return commentRepository.findAllByPropertyIdNativeDesc(propertyId, _limit,
+            return commentRepository.findAllByPropertyIdNativeDesc(propertyId, limit,
                             offset)
                     .stream().map(this::mapToComment).toList();
         } else {
-            return commentRepository.findAllByPropertyIdNativeAsc(propertyId, _limit,
+            return commentRepository.findAllByPropertyIdNativeAsc(propertyId, limit,
                             offset)
                     .stream().map(this::mapToComment).toList();
         }
@@ -52,7 +56,7 @@ public class CommentService {
         var deletedComment = commentRepository.findByIdEager(commentId).orElseThrow(
                 () -> new ObjectNotFoundException("comment", commentId)
         );
-        if (!deletedComment.getUser().getId().equals(userId)) {
+        if (!deletedComment.getUser().getId().equals(userId) && userId != -1) {
             throw new AccessDeniedException("Access Denied For This User");
         }
 
@@ -96,7 +100,7 @@ public class CommentService {
 
         if (result[12] != null) {
             var avatar = new Image();
-            avatar.setId((Long) result[12]);
+            avatar.setUrl((String) result[12]);
             avatar.setName((String) result[13]);
             user.setAvatar(avatar);
         }

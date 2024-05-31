@@ -38,7 +38,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
                 u.enabled,
                 u.created_at,
                 u.updated_at,
-                a.id,
+                a.url,
                 a.name
             FROM comment c
             LEFT JOIN user_account u ON u.id = c.user_id
@@ -47,8 +47,8 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
             ORDER BY c.updated_at DESC
             LIMIT :limit OFFSET :offset""", nativeQuery = true)
     List<Object[]> findAllByPropertyIdNativeDesc(@NonNull Long propertyId,
-                                             @NonNull Integer limit,
-                                             @NonNull Integer offset);
+                                             @NonNull Long limit,
+                                             @NonNull Long offset);
 
     @Query(value = """
             SELECT
@@ -72,7 +72,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
                 u.enabled,
                 u.created_at,
                 u.updated_at,
-                a.id,
+                a.url,
                 a.name
             FROM comment c
             LEFT JOIN user_account u ON u.id = c.user_id
@@ -81,6 +81,6 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
             ORDER BY c.updated_at
             LIMIT :limit OFFSET :offset""", nativeQuery = true)
     List<Object[]> findAllByPropertyIdNativeAsc(@NonNull Long propertyId,
-                                                 @NonNull Integer limit,
-                                                 @NonNull Integer offset);
+                                                 @NonNull Long limit,
+                                                 @NonNull Long offset);
 }

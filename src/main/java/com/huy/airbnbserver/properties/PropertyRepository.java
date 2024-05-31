@@ -193,4 +193,8 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
     @Query(value = "DELETE FROM liked_property " +
             "WHERE user_id = :userId AND property_id = :propertyId", nativeQuery = true)
     void userUnlikeProperty(@NonNull Long propertyId, @NonNull Integer userId);
+
+    @Query(value = """
+        SELECT property_id FROM liked_property WHERE user_id = :id""",nativeQuery = true)
+    List<Object> getAllFavorites(Integer id);
 }

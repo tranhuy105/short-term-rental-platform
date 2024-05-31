@@ -2,6 +2,7 @@ package com.huy.airbnbserver.auth;
 
 import com.huy.airbnbserver.email.EmailService;
 import com.huy.airbnbserver.email.EmailTemplateName;
+import com.huy.airbnbserver.properties.PropertyRepository;
 import com.huy.airbnbserver.security.JwtService;
 import com.huy.airbnbserver.security.token.Token;
 import com.huy.airbnbserver.security.token.TokenRepository;
@@ -27,6 +28,7 @@ import java.util.HashMap;
 @RequiredArgsConstructor
 public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
+    private final PropertyRepository propertyRepository;
     private final UserRepository userRepository;
     private final TokenRepository tokenRepository;
     private final EmailService emailService;
@@ -67,12 +69,14 @@ public class AuthenticationService {
         claims.put("fullName", userPrincipal.getUser().getFullname());
         claims.put("userId", userPrincipal.getUser().getId());
 
-        var jwtToken = jwtService.generateToken(claims, (UserPrincipal) auth.getPrincipal());
+        var jwtToken = jwtService.generateToken(claims, userPrincipal);
 
         var response = new HashMap<>();
         response.put("access_token", jwtToken);
         response.put("user_info", userToUserDtoConverter
                 .convert(userPrincipal.getUser()));
+        response.put("favorites", propertyRepository.getAllFavorites(userPrincipal.getUser().getId()));
+
         return response;
     }
 

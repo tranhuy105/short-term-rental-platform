@@ -2,7 +2,6 @@ package com.huy.airbnbserver.properties;
 
 import com.huy.airbnbserver.image.Image;
 import com.huy.airbnbserver.image.ImageDto;
-import com.huy.airbnbserver.image.ImageRepository;
 import com.huy.airbnbserver.image.firebase.FirebaseImageService;
 import com.huy.airbnbserver.properties.enm.*;
 import com.huy.airbnbserver.properties.dto.PropertyOverviewProjection;
@@ -19,7 +18,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -29,7 +27,6 @@ public class PropertyService {
     private final PropertyRepository propertyRepository;
     private final UserRepository userRepository;
     private final FirebaseImageService firebaseImageService;
-    private final ImageRepository imageRepository;
     private final NativePropertyRepository nativePropertyRepository;
 
     public Property findById(Long id) {
@@ -43,6 +40,12 @@ public class PropertyService {
 
     public void existCheck(Long id) {
         propertyRepository.findById(id).orElseThrow(
+                () -> new ObjectNotFoundException("property", id)
+        );
+    }
+
+    public Property findByIdLazy(Long id) {
+        return propertyRepository.findById(id).orElseThrow(
                 () -> new ObjectNotFoundException("property", id)
         );
     }
@@ -109,10 +112,15 @@ public class PropertyService {
     }
 
     @Transactional
-    public void delete(Long id, Integer userId) {
+    public void delete(Long id, Integer userId) throws IOException {
         var deletedProperty = propertyRepository.findById(id).orElseThrow(() -> new ObjectNotFoundException("property", id));
-        if (!userId.equals(deletedProperty.getHost().getId())) {
+
+        if (!userId.equals(deletedProperty.getHost().getId()) && userId != -1) {
             throw new AccessDeniedException("This user dont have access to this resource");
+        }
+
+        for (Image image: deletedProperty.getImages()){
+            firebaseImageService.delete(image);
         }
 
         for (User user : deletedProperty.getLikedByUsers()) {
@@ -124,6 +132,8 @@ public class PropertyService {
 
     @Transactional
     public void like(Long id, Integer userId) {
+        existCheck(id);
+
         if (!propertyRepository.getLikedDetailsOfUserIdAndPropertyId(userId, id).isEmpty()) {
             throw new EntityAlreadyExistException("Liked Entity Associated with this userId and propertyId");
         }
@@ -140,13 +150,9 @@ public class PropertyService {
         propertyRepository.userUnlikeProperty(id, userId);
     }
 
-    public List<PropertyOverviewProjection> getAllLikedPropertiedByUserWithUserId(Integer userId, int page, int pageSize) {
-        long _limit;
-        _limit = pageSize;
-        long offset = ((long) (page - 1) * _limit);
-
+    public List<PropertyOverviewProjection> getAllLikedPropertiedByUserWithUserId(Integer userId, long limit, long offset) {
         return propertyRepository
-                .getLikedByUserId(userId, _limit, offset)
+                .getLikedByUserId(userId, limit, offset)
                 .stream()
                 .map(this::mapToPropertyOverviewProjection)
                 .toList();
@@ -169,8 +175,8 @@ public class PropertyService {
             Integer minBeds,
             Integer minBathrooms,
             Integer minBedrooms,
-            int page,
-            int pageSize,
+            long limit,
+            long offset,
             SortColumn sortColumn,
             SortDirection sortDirection
     ) {
@@ -182,10 +188,6 @@ public class PropertyService {
         String _category1 = category1 == null ? null : category1.name();
         String _category2 = category2 == null ? null : category2.name();
         String _tag = tag == null ? null : tag.name();
-
-        long _limit;
-        _limit = pageSize;
-        long offset = ((long) (page - 1) * _limit);
 
         List<Object[]> results = nativePropertyRepository.findAllNative(
                 sortColumn.name(),
@@ -203,7 +205,7 @@ public class PropertyService {
                 minBeds,
                 minBathrooms,
                 minBedrooms,
-                _limit,
+                limit,
                 offset
         );
 
@@ -362,4 +364,18 @@ public class PropertyService {
         return property;
     }
 
+
+
+
+
+    @Transactional
+    public void saveMock(Property property, Integer userId, List<Image> images) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ObjectNotFoundException("user", userId));
+
+
+        property.setHost(user);
+        property.setImages(images);
+        propertyRepository.save(property);
+    }
 }

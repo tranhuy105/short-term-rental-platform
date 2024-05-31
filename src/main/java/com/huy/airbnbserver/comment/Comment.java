@@ -2,6 +2,7 @@ package com.huy.airbnbserver.comment;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.huy.airbnbserver.report.ReportableEntity;
 import com.huy.airbnbserver.properties.Property;
 import com.huy.airbnbserver.user.User;
 import jakarta.persistence.*;
@@ -11,7 +12,6 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDateTime;
 import java.util.Date;
 
 @Entity
@@ -23,7 +23,7 @@ import java.util.Date;
 @Table(indexes = {
         @Index(name = "host_id_index", columnList = "property_id")
 })
-public class Comment {
+public class Comment implements ReportableEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
@@ -63,5 +63,15 @@ public class Comment {
     public void addProperty(Property property) {
         this.property = property;
         property.getComments().add(this);
+    }
+
+    @Override
+    public Long getEntityId() {
+        return this.id;
+    }
+
+    @Override
+    public String getType() {
+        return "Comment";
     }
 }

@@ -3,10 +3,10 @@ package com.huy.airbnbserver.booking;
 import com.huy.airbnbserver.booking.converter.BookingDtoToBookingConverter;
 import com.huy.airbnbserver.booking.converter.BookingToBookingDtoConverter;
 import com.huy.airbnbserver.booking.dto.BookingDto;
-import com.huy.airbnbserver.system.Result;
-import com.huy.airbnbserver.system.StatusCode;
-import com.huy.airbnbserver.system.Utils;
+import com.huy.airbnbserver.booking.dto.BookingPageDto;
+import com.huy.airbnbserver.system.*;
 import com.huy.airbnbserver.system.exception.InvalidDateArgumentException;
+import com.huy.airbnbserver.system.exception.InvalidSearchQueryException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -46,42 +46,59 @@ public class BookingController {
     }
 
     @GetMapping("/users/{userId}/bookings")
-    public Result getAllBookingsByUser(Authentication authentication, @PathVariable Integer userId) {
+    public Result getAllBookingsByUser(Authentication authentication,
+                                       @PathVariable Integer userId,
+                                       @RequestParam(value = "page", required = false) Long page,
+                                       @RequestParam(value = "page_size", required = false) Long pageSize) {
         Integer authId = Utils.extractAuthenticationId(authentication);
 
         if (!authId.equals(userId)) {
             throw new AccessDeniedException("Access denied for this user");
         }
 
-        var bookingList = bookingService.getAllBookingByUserId(userId);
+        pageSizeCheck(page,pageSize);
+        Page pageObject =  new Page(page,pageSize);
+        var bookingList = bookingService.getAllBookingByUserId(userId, pageObject.getLimit(), pageObject.getOffset());
         var bookingDtoList = bookingList
                 .stream()
                 .map(bookingToBookingDtoConverter::convert)
                 .toList();
+        PageMetadata pageMetadata = new PageMetadata(
+                pageObject.getPage(),
+                pageObject.getPageSize(),
+                bookingService.getAllBookingByUserIdCount(userId));
         return new Result(
                 true,
                 StatusCode.SUCCESS,
                 "Fetch all booking for user with id: " + userId,
-                bookingDtoList
+                new BookingPageDto(pageMetadata, bookingDtoList)
         );
     }
 
     @GetMapping("/properties/{propertyId}/bookings")
     public Result getAllBookingsForPropertyHost(
             @PathVariable Long propertyId,
-            Authentication authentication
+            Authentication authentication,
+            @RequestParam(value = "page", required = false) Long page,
+            @RequestParam(value = "page_size", required = false) Long pageSize
     ) {
+        pageSizeCheck(page,pageSize);
+        Page pageObject =  new Page(page,pageSize);
         var bookingList = bookingService
-                .getAllBookingByPropertyId(propertyId, Utils.extractAuthenticationId(authentication));
+                .getAllBookingByPropertyId(propertyId, Utils.extractAuthenticationId(authentication), pageObject.getLimit(), pageObject.getOffset());
         var bookingDtoList = bookingList
                 .stream()
                 .map(bookingToBookingDtoConverter::convert)
                 .toList();
+        PageMetadata pageMetadata = new PageMetadata(
+                pageObject.getPage(),
+                pageObject.getPageSize(),
+                bookingService.getAllBookingByPropertyIdCount(propertyId));
         return new Result(
                 true,
                 StatusCode.SUCCESS,
                 "Fetch all booking for property with id: " + propertyId,
-                bookingDtoList
+                new BookingPageDto(pageMetadata, bookingDtoList)
         );
     }
 
@@ -101,5 +118,15 @@ public class BookingController {
     ) {
         bookingService.confirm(id, Utils.extractAuthenticationId(authentication));
         return new Result(true, StatusCode.SUCCESS, "Confirm booking success");
+    }
+
+    private void pageSizeCheck(Long page, Long pageSize) {
+        if (page != null && page < 1) {
+            throw new InvalidSearchQueryException("Page must be greater than zero");
+        }
+
+        if (pageSize != null && pageSize < 5) {
+            throw new InvalidSearchQueryException("Page size must be at least 5");
+        }
     }
 }

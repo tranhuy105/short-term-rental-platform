@@ -1,5 +1,6 @@
 package com.huy.airbnbserver;
 
+import com.github.javafaker.Faker;
 import io.swagger.v3.oas.models.ExternalDocumentation;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
@@ -9,6 +10,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableAsync;
 
+import java.util.Locale;
+
 @SpringBootApplication
 @EnableAsync
 public class AirbnbServerApplication {
@@ -17,6 +20,10 @@ public class AirbnbServerApplication {
         SpringApplication.run(AirbnbServerApplication.class, args);
     }
 
+    @Bean
+    public Faker faker() {
+        return new Faker(new Locale("en"));
+    }
 
     @Bean
     public OpenAPI airbnbServerAPI() {

@@ -41,7 +41,7 @@ public class AuthenticationController {
         if (res.equals("Token has expired, a new token has been sent for this email!")) {
             code = 201;
         }
-        return new Result(true, code, "Transaction done", authenticationService.activate(token));
+        return new Result(true, code, "Transaction done", res);
     }
 
     @GetMapping("/resend-token")

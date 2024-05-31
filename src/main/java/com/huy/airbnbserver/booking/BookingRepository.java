@@ -9,11 +9,17 @@ import java.util.List;
 import java.util.Optional;
 
 public interface BookingRepository extends JpaRepository<Booking, Long> {
-    @Query(value = "SELECT * FROM booking b WHERE b.user_id = :userId", nativeQuery = true)
-    List<Booking> findByUserId(Integer userId);
+    @Query(value = "SELECT * FROM booking b WHERE b.user_id = :userId ORDER BY b.created_at DESC LIMIT :limit OFFSET :offset", nativeQuery = true)
+    List<Booking> findByUserId(Integer userId, long limit, long offset);
 
-    @Query(value = "SELECT * FROM booking b WHERE b.property_id = :propertyId", nativeQuery = true)
-    List<Booking> findByPropertyId(Long propertyId);
+    @Query(value = "SELECT COUNT(*) FROM booking b WHERE b.user_id = :userId", nativeQuery = true)
+    Long findTotalByUserId(Integer userId);
+
+    @Query(value = "SELECT * FROM booking b WHERE b.property_id = :propertyId ORDER BY b.created_at DESC LIMIT :limit OFFSET :offset", nativeQuery = true)
+    List<Booking> findByPropertyId(Long propertyId, long limit, long offset);
+
+    @Query(value = "SELECT COUNT(*) FROM booking b WHERE b.property_id = :propertyId", nativeQuery = true)
+    Long getTotalBookingByPropertyId(Long propertyId);
 
     @Query(value = """
         SELECT b FROM Booking b
