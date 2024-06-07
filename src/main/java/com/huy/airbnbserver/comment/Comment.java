@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.huy.airbnbserver.report.ReportableEntity;
 import com.huy.airbnbserver.properties.Property;
-import com.huy.airbnbserver.user.User;
+import com.huy.airbnbserver.user.model.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -54,7 +54,6 @@ public class Comment implements ReportableEntity {
     @JoinColumn(name = "property_id")
     @JsonBackReference
     private Property property;
-
 
     public void addUser(User user) {
         this.user = user;

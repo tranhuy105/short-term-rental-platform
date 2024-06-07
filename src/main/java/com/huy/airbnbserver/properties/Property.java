@@ -2,13 +2,14 @@
     
     import com.fasterxml.jackson.annotation.JsonBackReference;
     import com.fasterxml.jackson.annotation.JsonManagedReference;
+    import com.huy.airbnbserver.comment.Review;
     import com.huy.airbnbserver.report.ReportableEntity;
     import com.huy.airbnbserver.booking.Booking;
     import com.huy.airbnbserver.comment.Comment;
     import com.huy.airbnbserver.image.Image;
     import com.huy.airbnbserver.properties.enm.Category;
     import com.huy.airbnbserver.properties.enm.Tag;
-    import com.huy.airbnbserver.user.User;
+    import com.huy.airbnbserver.user.model.User;
     import jakarta.persistence.*;
     import jakarta.validation.constraints.Min;
     import jakarta.validation.constraints.NotEmpty;
@@ -101,6 +102,9 @@
     
         @OneToMany(mappedBy = "property", fetch = FetchType.LAZY, cascade = CascadeType.ALL) @JsonBackReference
         private List<Booking> bookings = new ArrayList<>();
+
+        @OneToMany(mappedBy = "property", fetch = FetchType.LAZY, cascade = CascadeType.ALL) @JsonManagedReference
+        private List<Review> reviews = new ArrayList<>();
     
         @OneToMany(mappedBy = "property", fetch = FetchType.LAZY, cascade = CascadeType.ALL) @JsonManagedReference
         private List<Comment> comments = new ArrayList<>();

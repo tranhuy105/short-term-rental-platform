@@ -1,8 +1,10 @@
 package com.huy.airbnbserver.booking;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.huy.airbnbserver.comment.Review;
 import com.huy.airbnbserver.properties.Property;
-import com.huy.airbnbserver.user.User;
+import com.huy.airbnbserver.user.model.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.Min;
@@ -11,7 +13,6 @@ import lombok.*;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.CreationTimestamp;
 
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
 
@@ -40,9 +41,15 @@ public class Booking{
     @NotNull
     private Date checkOutDate;
 
+    @Column(nullable = false)
+    private Boolean isCheckedOut;
+
     // confirm, pending, ...
     @Column(nullable = false)
     private boolean isConfirm = false;
+
+    @Column(nullable = false)
+    private String status = "PENDING";
 
     @Column(nullable = false, updatable = false)
     @Min(0)
@@ -82,6 +89,10 @@ public class Booking{
     @JoinColumn(name = "property_id")
     @JsonManagedReference
     private Property property;
+
+    @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL)
+    @JsonBackReference
+    private Review review;
 
     public void addUser(User user) {
         this.user = user;

@@ -220,8 +220,38 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
         SELECT property_id FROM liked_property WHERE user_id = :id""",nativeQuery = true)
     List<Object> getAllFavorites(Integer id);
 
-    @Query(value = "SELECT COUNT(p.id) FROM property p ", nativeQuery = true)
-    Long countAll();
+    @Query(value = """
+            SELECT COUNT(p.id)
+            FROM
+                property p
+            WHERE (:category1 IS NULL OR EXISTS
+                (SELECT 1 FROM property_categories pc1 WHERE pc1.property_id = p.id AND pc1.categories = :category1))
+            AND (:category2 IS NULL OR EXISTS
+                (SELECT 1 FROM property_categories pc2 WHERE pc2.property_id = p.id AND pc2.categories = :category2))
+            AND (:tag IS NULL OR p.tag = :tag)
+            AND (:area IS NULL OR
+                (p.longitude BETWEEN :minLongitude AND :maxLongitude) AND
+                (p.latitude BETWEEN :minLatitude AND :maxLatitude))
+            AND (:minNightlyPrice IS NULL OR :maxNightlyPrice IS NULL OR
+                p.nightly_price BETWEEN :minNightlyPrice AND :maxNightlyPrice)
+            AND (:minBeds IS NULL OR p.num_beds >= :minBeds)
+            AND (:minBathrooms IS NULL OR p.num_bathrooms >= :minBathrooms)
+            AND (:minBedrooms IS NULL OR p.num_bedrooms >= :minBedrooms)
+            AND (:maxGuest IS NULL OR p.max_guests <= :maxGuest)""", nativeQuery = true)
+    Long countAll(@Nullable String category1,
+                  @Nullable String category2,
+                  @Nullable String tag,
+                  @Nullable Area area,
+                  @Nullable Double minLongitude,
+                  @Nullable Double maxLongitude,
+                  @Nullable Double minLatitude,
+                  @Nullable Double maxLatitude,
+                  @Nullable Double minNightlyPrice,
+                  @Nullable Double maxNightlyPrice,
+                  @Nullable Integer minBeds,
+                  @Nullable Integer minBathrooms,
+                  @Nullable Integer minBedrooms,
+                  @Nullable Integer maxGuest);
 
     @Query(value = "SELECT COUNT(p.id) FROM property p WHERE p.host_id = :userId", nativeQuery = true)
     Long countAllForUserId(@NonNull Integer userId);
