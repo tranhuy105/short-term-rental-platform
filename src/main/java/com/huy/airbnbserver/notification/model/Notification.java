@@ -31,6 +31,12 @@ public class Notification {
     @Column(nullable = false)
     private Boolean isRead = false;
 
+    @Column(nullable = false)
+    private String type;
+
+    @Column(nullable = false)
+    private Long referenceId;
+
     @Column(nullable = false, updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
     @CreationTimestamp

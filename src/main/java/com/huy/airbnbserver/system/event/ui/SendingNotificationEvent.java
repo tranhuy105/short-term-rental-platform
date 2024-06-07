@@ -10,6 +10,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @EqualsAndHashCode
 public class SendingNotificationEvent {
+    private String referencesObjectType;
     private Integer receiverID;
     private Long referencesObjectID;
     private String message;

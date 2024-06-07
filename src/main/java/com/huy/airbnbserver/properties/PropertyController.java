@@ -192,8 +192,6 @@ public class PropertyController {
 
         Property property = propertyDetailDtoToPropertyConverter.convert(propertyDetailDto);
         assert images != null;
-        images.forEach(System.out::println);
-
         assert property != null;
         propertyService.save(property, Utils.extractAuthenticationId(authentication), images);
 //        var savedProperty = propertyService.save(property, Utils.extractAuthenticationId(authentication), images);

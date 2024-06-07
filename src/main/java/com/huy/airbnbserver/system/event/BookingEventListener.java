@@ -3,6 +3,7 @@ package com.huy.airbnbserver.system.event;
 import com.huy.airbnbserver.booking.BookingRepository;
 import com.huy.airbnbserver.booking.BookingStatus;
 import com.huy.airbnbserver.system.event.booking.*;
+import com.huy.airbnbserver.system.event.ui.NotificationRefType;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
@@ -80,7 +81,8 @@ public class BookingEventListener {
         eventPublisher.publishSendingNotificationEvent(
                 booking.getIssuer_id(),
                 booking.getId(),
-                "Your booking has been confirmed from host, click for me detail!");
+                "Your booking has been confirmed from host, click for me detail!",
+                NotificationRefType.BOOKING.name());
     }
 
     @EventListener
@@ -91,7 +93,8 @@ public class BookingEventListener {
         eventPublisher.publishSendingNotificationEvent(
                 booking.getIssuer_id(),
                 booking.getId(),
-                "Your booking has failed due to these reason: "+event.getReason()+". Please try to plan your book again!"
+                "Your booking has failed due to these reason: "+event.getReason()+". Please try to plan your book again!",
+                NotificationRefType.BOOKING.name()
         );
     }
 

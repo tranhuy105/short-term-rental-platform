@@ -2,7 +2,7 @@ package com.huy.airbnbserver.booking;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.huy.airbnbserver.comment.Review;
+import com.huy.airbnbserver.review.Review;
 import com.huy.airbnbserver.properties.Property;
 import com.huy.airbnbserver.user.model.User;
 import jakarta.persistence.*;
@@ -102,6 +102,11 @@ public class Booking{
     public void addProperty(Property property) {
         this.property = property;
         user.getBookings().add(this);
+    }
+
+    public void addReview(Review review) {
+        this.review = review;
+        review.setBooking(this);
     }
 
     public void cancel() {

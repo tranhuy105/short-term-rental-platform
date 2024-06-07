@@ -5,11 +5,14 @@ import com.huy.airbnbserver.booking.dto.BookingDto;
 import com.huy.airbnbserver.properties.PropertyRepository;
 import com.huy.airbnbserver.system.Utils;
 import com.huy.airbnbserver.system.event.EventPublisher;
+import com.huy.airbnbserver.system.event.ui.NotificationRefType;
 import com.huy.airbnbserver.system.exception.InvalidDateArgumentException;
 import com.huy.airbnbserver.system.exception.NotModifiedException;
 import com.huy.airbnbserver.system.exception.ObjectNotFoundException;
 import com.huy.airbnbserver.user.UserRepository;
 import lombok.AllArgsConstructor;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -27,6 +30,7 @@ public class BookingService {
     private final PropertyRepository propertyRepository;
     private final BookingRepository bookingRepository;
     private final EventPublisher eventPublisher;
+    private static final Logger LOG = LogManager.getLogger(BookingService.class);
 
     @Transactional
     public Booking save(Booking booking, Integer userId, Long propertyId) {
@@ -44,7 +48,8 @@ public class BookingService {
         eventPublisher.publishSendingNotificationEvent(
                 property.getHost().getId(),
                 propertyId,
-                "Your property has a new booking! click to see in more detail."
+                "Your property has a new booking! click to see in more detail.",
+                NotificationRefType.BOOKING.name()
         );
         return newBooking;
     }
@@ -157,7 +162,7 @@ public class BookingService {
         }
 
         if (!isCheckOut) {
-            if (bookingDetail.getCheck_out_date().before(new Date())) {
+            if (bookingDetail.getCheck_out_date().after(new Date())) {
                 throw new NotModifiedException("Please way until the last day of check out date");
             }
             // update status to no show
@@ -166,16 +171,18 @@ public class BookingService {
             eventPublisher.publishSendingNotificationEvent(
                     bookingDetail.getIssuer_id(),
                     bookingId,
-                    "We have acknowledge you had a booking but did not show up, click for more detail"
+                    "We have acknowledge you had a booking but did not show up, click for more detail",
+                    NotificationRefType.BOOKING.name()
             );
         } else {
-            bookingRepository.updateStatus(BookingStatus.CHECK_OUT.toString(), bookingId);
+            bookingRepository.checkOut(bookingId);
             // send a notification to user ask for giving a review
             eventPublisher.publishSendingNotificationEvent(
                     bookingDetail.getIssuer_id(),
                     bookingId,
                     "Congratulation, your trip is not completed, " +
-                            "please consider leave a review for the property to help other user"
+                            "please consider leave a review for the property to help other user",
+                    NotificationRefType.BOOKING.name()
             );
             // host get the remaining 50%
         }
@@ -204,11 +211,12 @@ public class BookingService {
 
     @Scheduled(cron = "0 0 1 * * ?") // Runs daily at 1 AM
     public void detectNoShows() {
+        LOG.info("Auto Detect No-Show Booking Executed, Sending Notification To All Host...");
         var bookingIds = bookingRepository.findPendingCheckoutsPastEndDate();
         bookingIds.forEach(objects -> {
             // objects[0] = bookingId
             // objects[1] = hostId
-            System.out.println((Long) objects[0] + " "+ (Integer) objects[1]);
+            LOG.info("Potential No-Show Booking: {id:{}, hostId:{}}", objects[0], objects[1]);
             // send a notification ask if the user hasn't showed up
             // or if they forgot to set the is_checked_out to be true
         });

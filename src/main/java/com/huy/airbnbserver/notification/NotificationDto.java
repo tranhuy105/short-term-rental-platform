@@ -3,9 +3,12 @@ package com.huy.airbnbserver.notification;
 import java.util.Date;
 
 public record NotificationDto(
-        Integer receiver_id,
-        String message,
         Boolean is_read,
-        Date created_at
+        String message,
+        Date created_at,
+        String type,
+        Long object_ref_id,
+        Integer receiver_id
+
 ) {
 }

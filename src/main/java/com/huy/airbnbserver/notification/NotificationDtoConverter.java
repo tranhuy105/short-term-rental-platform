@@ -9,10 +9,12 @@ public class NotificationDtoConverter implements Converter<Notification, Notific
     @Override
     public NotificationDto convert(Notification source) {
         return new NotificationDto(
-                source.getUser().getId(),
-                source.getMessage(),
                 source.getIsRead(),
-                source.getCreatedAt()
+                source.getMessage(),
+                source.getCreatedAt(),
+                source.getType(),
+                source.getReferenceId(),
+                source.getUser().getId()
         );
-    }
+    };
 }

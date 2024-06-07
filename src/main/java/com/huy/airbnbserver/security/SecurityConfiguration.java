@@ -44,7 +44,8 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.GET,
                                 "/api/v1/properties/**",
                                 "/api/v1/users/**",
-                                "/api/v1/notifications/**")
+                                "/api/v1/notifications/**",
+                                "/api/v1/reviews/**")
                         .permitAll()
                         .requestMatchers(
                                 "/api/v1/auth/**",

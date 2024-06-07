@@ -1,6 +1,5 @@
 package com.huy.airbnbserver.admin;
 
-import com.huy.airbnbserver.comment.CommentService;
 import com.huy.airbnbserver.properties.PropertyService;
 import com.huy.airbnbserver.report.ReportService;
 import com.huy.airbnbserver.report.dto.ReportDto;
@@ -25,7 +24,6 @@ public class AdminController {
     private final ReportService reportService;
     private final UserService userService;
     private final PropertyService propertyService;
-    private final CommentService commentService;
     private final FakerService fakerService;
 
     @GetMapping("/admin/reported-properties")
@@ -109,16 +107,11 @@ public class AdminController {
         return new Result(true, 200, "delete property with id "+propertyId);
     }
 
-    @DeleteMapping("/admin/comments/{commentId}")
-    public Result deleteComment(@PathVariable Long commentId) {
-        commentService.delete(commentId, -1);
-        return new Result(true, 200, "delete comment with id "+commentId);
-    }
-
-    @GetMapping("/admin/generate-comments")
-    public Result generateComment() {
-        return new Result(true, 200, "generate mock comment", fakerService.generateComment());
-    }
+//    @DeleteMapping("/admin/comments/{commentId}")
+//    public Result deleteComment(@PathVariable Long commentId) {
+//        commentService.delete(commentId, -1);
+//        return new Result(true, 200, "delete comment with id "+commentId);
+//    }
 
     @GetMapping("/admin/generate-bookings")
     public Result generateBooking() {
@@ -127,7 +120,7 @@ public class AdminController {
     }
 
     @GetMapping("/admin/generate-properties")
-    public Result generateProperties() {
+    public Result generateProperties() throws IOException {
         fakerService.generateProperty();
         return new Result(true, 200, "generate mock property");
     }
