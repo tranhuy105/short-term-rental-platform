@@ -13,7 +13,15 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
 
     public void save(SendingNotificationEvent event) {
-        notificationRepository.saveNew(event.getReceiverID(), event.getMessage());
+        notificationRepository.saveNew(
+                event.getReceiverID(),
+                event.getMessage(),
+                event.getReferencesObjectID(),
+                event.getReferencesObjectType());
+    }
+
+    public void read(Integer userId) {
+        notificationRepository.read(userId);
     }
 
     public List<Notification> findAll(Integer userId) {

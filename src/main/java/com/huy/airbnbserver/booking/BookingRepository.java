@@ -60,12 +60,16 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query(value = "UPDATE booking SET is_confirm = true WHERE id = :id", nativeQuery = true)
     void confirmBooking(@NonNull Long id);
 
+    @Modifying
+    @Query(value = "UPDATE booking SET is_checked_out = true, status = 'CHECK_OUT' WHERE id = :bookingId", nativeQuery = true)
+    void checkOut(@NonNull Long bookingId);
+
     @Query(value = """
             SELECT DISTINCT DATE(check_in_date) AS booking_date
-            FROM booking WHERE property_id = :propertyId AND status NOT IN ('REJECTED','CANCEL')
+            FROM booking WHERE property_id = :propertyId AND status NOT IN ('REJECTED','CANCEL') AND booking.check_in_date > CURRENT_DATE
             UNION
             SELECT DISTINCT DATE(check_out_date) AS booking_date
-            FROM booking WHERE property_id = :propertyId AND status NOT IN ('REJECTED','CANCEL')""", nativeQuery = true)
+            FROM booking WHERE property_id = :propertyId AND status NOT IN ('REJECTED','CANCEL') AND booking.check_out_date > CURRENT_DATE""", nativeQuery = true)
     List<Date> findAllBookingDateOfProperty(@NonNull Long propertyId);
 
     @Query(value = """

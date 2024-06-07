@@ -32,10 +32,10 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
                 GROUP_CONCAT(DISTINCT i.id) AS imageIds,
                 GROUP_CONCAT(DISTINCT i.url) AS imageUrls,
                 GROUP_CONCAT(DISTINCT i.name) AS imageNames,
-                COALESCE(AVG(c.rating), 0) AS averageRating
+                COALESCE(AVG(r.rating), 0) AS averageRating
             FROM property p
             LEFT JOIN image i ON p.id = i.property_id
-            LEFT JOIN comment c ON p.id = c.property_id
+            LEFT JOIN booking b on b.property_id = p.id LEFT JOIN review r on r.booking_id = b.id
             LEFT JOIN liked_property lp ON p.id = lp.property_id
             WHERE lp.user_id = :userId
             GROUP BY p.id
@@ -63,11 +63,11 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
 
     @Query(value = """
             SELECT
-                AVG(c.rating) AS averageRating,
+                AVG(r.rating) AS averageRating,
                 COUNT(*) AS totalRating
-            FROM comment c
-            WHERE c.property_id = :propertyId
-            GROUP BY c.property_id""", nativeQuery = true)
+            FROM review r LEFT JOIN booking b ON b.id = r.booking_id
+            WHERE b.property_id = :propertyId
+            GROUP BY b.property_id""", nativeQuery = true)
     ReviewInfoProjection findAverageRatingForProperty(@Param("propertyId") Long propertyId);
 
     @Query(value = """
@@ -83,10 +83,10 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
             GROUP_CONCAT(DISTINCT i.id) AS imageIds,
             GROUP_CONCAT(DISTINCT i.url) AS imageUrls,
             GROUP_CONCAT(DISTINCT i.name) AS imageNames,
-            COALESCE(AVG(c.rating), 0) AS averageRating
+            COALESCE(AVG(r.rating), 0) AS averageRating
         FROM property p
         LEFT JOIN image i ON p.id = i.property_id
-        LEFT JOIN comment c ON p.id = c.property_id
+        LEFT JOIN booking b on b.property_id = p.id LEFT JOIN review r on r.booking_id = b.id
         WHERE p.host_id = :userId
         GROUP BY p.id
         ORDER BY averageRating DESC
@@ -108,10 +108,10 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
             GROUP_CONCAT(DISTINCT i.id) AS imageIds,
             GROUP_CONCAT(DISTINCT i.url) AS imageUrls,
             GROUP_CONCAT(DISTINCT i.name) AS imageNames,
-            COALESCE(AVG(c.rating), 0) AS averageRating
+            COALESCE(AVG(r.rating), 0) AS averageRating
         FROM property p
         LEFT JOIN image i ON p.id = i.property_id
-        LEFT JOIN comment c ON p.id = c.property_id
+        LEFT JOIN booking b on b.property_id = p.id LEFT JOIN review r on r.booking_id = b.id
         WHERE (:category1 IS NULL OR EXISTS
             (SELECT 1 FROM property_categories pc1 WHERE pc1.property_id = p.id AND pc1.categories = :category1))
         AND (:category2 IS NULL OR EXISTS
@@ -196,10 +196,10 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
             GROUP_CONCAT(DISTINCT i.id) AS imageIds,
             GROUP_CONCAT(DISTINCT i.url) AS imageUrls,
             GROUP_CONCAT(DISTINCT i.name) AS imageNames,
-            COALESCE(AVG(c.rating), 0) AS averageRating
+            COALESCE(AVG(r.rating), 0) AS averageRating
         FROM property p
         LEFT JOIN image i ON p.id = i.property_id
-        LEFT JOIN comment c ON p.id = c.property_id
+        LEFT JOIN booking b on b.property_id = p.id LEFT JOIN review r on r.booking_id = b.id
         WHERE p.host_id = :userId
         GROUP BY p.id
         ORDER BY updatedAt DESC

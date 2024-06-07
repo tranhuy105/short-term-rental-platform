@@ -33,8 +33,8 @@ public class EventPublisher {
         applicationEventPublisher.publishEvent(e);
     }
 
-    public void publishSendingNotificationEvent(Integer receiverID, Long referencesObjectID, String message) {
-        SendingNotificationEvent e = new SendingNotificationEvent(receiverID, referencesObjectID, message);
+    public void publishSendingNotificationEvent(Integer receiverID, Long referencesObjectID, String message, String type) {
+        SendingNotificationEvent e = new SendingNotificationEvent(type, receiverID, referencesObjectID, message);
         applicationEventPublisher.publishEvent(e);
     }
 

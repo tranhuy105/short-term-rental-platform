@@ -1,14 +1,13 @@
 package com.huy.airbnbserver.notification;
 
-import com.huy.airbnbserver.notification.model.Notification;
 import com.huy.airbnbserver.system.common.Result;
+import com.huy.airbnbserver.system.event.ui.NotificationRefType;
 import com.huy.airbnbserver.system.event.ui.SendingNotificationEvent;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 
-import java.time.LocalDate;
 import java.util.Date;
 
 @RestController
@@ -31,7 +30,7 @@ public class NotificationController {
     }
 
     @GetMapping(value = "/notifications/{userId}")
-    public Result getAllMessage(@PathVariable Integer userId) {
+    public Result getAllNotification(@PathVariable Integer userId) {
         return new Result(
                 true,
                 200,
@@ -41,20 +40,27 @@ public class NotificationController {
 
     }
 
+    @GetMapping(value = "/notifications/{userId}/read")
+    public void readNotification(@PathVariable Integer userId) {
+        notificationService.read(userId);
+    }
+
     @GetMapping(value = "/notifications/test")
     public void test() {
          sendNotification(
-                new SendingNotificationEvent(2,502L,"test"));
+                new SendingNotificationEvent(NotificationRefType.BOOKING.name(),2,1L,"Your property has a new booking, click to see more in detail"));
     }
 
     public void sendNotification(SendingNotificationEvent event) {
-//        notificationService.save(event);
+        notificationService.save(event);
         notificationEventSink.tryEmitNext(
                 new NotificationDto(
-                        event.getReceiverID(),
-                        event.getMessage(),
                         false,
-                        new Date()
+                        event.getMessage(),
+                        new Date(),
+                        event.getReferencesObjectType(),
+                        event.getReferencesObjectID(),
+                        event.getReceiverID()
                 )
         );
     }
