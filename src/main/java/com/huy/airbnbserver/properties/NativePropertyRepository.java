@@ -53,7 +53,7 @@ public class NativePropertyRepository {
         AND (:minBeds IS NULL OR p.num_beds >= :minBeds)
         AND (:minBathrooms IS NULL OR p.num_bathrooms >= :minBathrooms)
         AND (:minBedrooms IS NULL OR p.num_bedrooms >= :minBedrooms)
-        AND (:maxGuest IS NULL OR p.max_guests <= :maxGuest)
+        AND (:maxGuest IS NULL OR p.max_guests >= :maxGuest)
         GROUP BY p.id
         ORDER BY""" + " " + sortColumn +" "+ sortDirection +
         " \nLIMIT :limit OFFSET :offset";

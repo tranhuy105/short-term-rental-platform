@@ -2,6 +2,7 @@ package com.huy.airbnbserver.booking;
 
 import com.huy.airbnbserver.booking.dto.BookingDetail;
 import com.huy.airbnbserver.booking.dto.BookingDto;
+import com.huy.airbnbserver.booking.dto.BookingLogProjection;
 import com.huy.airbnbserver.properties.PropertyRepository;
 import com.huy.airbnbserver.system.Utils;
 import com.huy.airbnbserver.system.event.EventPublisher;
@@ -44,6 +45,11 @@ public class BookingService {
         booking.setStatus(BookingStatus.PENDING.toString());
         booking.setIsCheckedOut(false);
 
+        BookingLog log = new BookingLog();
+        log.setEventType(BookingStatus.PENDING.toString());
+        log.setDescription(BookingLogDes.CREATED.getDescription());
+
+        booking.addLog(log);
         var newBooking = bookingRepository.save(booking);
         eventPublisher.publishSendingNotificationEvent(
                 property.getHost().getId(),
@@ -55,9 +61,9 @@ public class BookingService {
     }
 
     @Transactional(readOnly = true)
-    public List<Booking> getAllBookingByUserId(Integer userId, long limit, long offset) {
+    public List<BookingDetail> getAllBookingByUserId(Integer userId, long limit, long offset) {
         userRepository.findById(userId).orElseThrow(()->new ObjectNotFoundException("user", userId));
-        return bookingRepository.findByUserId(userId, limit, offset);
+        return bookingRepository.findByUserId(userId, limit, offset).stream().map(this::mapToBookingDetail).toList();
     }
 
     public Long getAllBookingByUserIdCount(Integer userId) {
@@ -69,14 +75,14 @@ public class BookingService {
     }
 
     @Transactional(readOnly = true)
-    public List<Booking> getAllBookingByPropertyId(Long propertyId, Integer userId, long limit, long offset) {
+    public List<BookingDetail> getAllBookingByPropertyId(Long propertyId, Integer userId, long limit, long offset) {
         var property = propertyRepository
                 .findById(propertyId)
                 .orElseThrow(()->new ObjectNotFoundException("property", propertyId));
         if (!property.getHost().getId().equals(userId)) {
             throw new AccessDeniedException("Access denied for this user");
         }
-        return bookingRepository.findByPropertyId(propertyId, limit, offset);
+        return bookingRepository.findByPropertyId(propertyId, limit, offset).stream().map(this::mapToBookingDetail).toList();
     }
 
     public BookingDetail findBookingDetail(Long id) {
@@ -86,6 +92,10 @@ public class BookingService {
         }
 
         return mapToBookingDetail(res.get(0));
+    }
+
+    public List<BookingLogProjection> findBookingLog(Long id) {
+        return bookingRepository.getLog(id);
     }
 
     private BookingDetail mapToBookingDetail(Object[] res) {
@@ -145,7 +155,6 @@ public class BookingService {
             throw new NotModifiedException("This booking has already been confirmed");
         }
 
-        bookingRepository.confirmBooking(id);
         eventPublisher.publishHostReviewBookingEvent(confirmBooking, true);
     }
 
@@ -167,6 +176,10 @@ public class BookingService {
             }
             // update status to no show
             bookingRepository.updateStatus(BookingStatus.NO_SHOW.toString(),bookingId);
+            bookingRepository.log(
+                    BookingStatus.NO_SHOW.toString(),
+                    bookingId,
+                    BookingLogDes.NO_SHOW.getDescription());
             // send a notification to user
             eventPublisher.publishSendingNotificationEvent(
                     bookingDetail.getIssuer_id(),
@@ -176,6 +189,10 @@ public class BookingService {
             );
         } else {
             bookingRepository.checkOut(bookingId);
+            bookingRepository.log(
+                    BookingStatus.CHECK_OUT.toString(),
+                    bookingId,
+                    BookingLogDes.CHECKED_OUT.getDescription());
             // send a notification to user ask for giving a review
             eventPublisher.publishSendingNotificationEvent(
                     bookingDetail.getIssuer_id(),
@@ -197,16 +214,27 @@ public class BookingService {
         }
 
         String status = bookingDetail.getStatus();
-        if (status.equals("PENDING") || status.equals("CONFIRMED") || status.equals("SUCCESS") ) {
+        if (status.equals("PENDING") || status.equals("SUCCESS") ) {
             bookingRepository.updateStatus(BookingStatus.CANCEL.toString(), bookingDetail.getId());
+            bookingRepository.log(
+                    BookingStatus.CANCEL.toString(),
+                    bookingDetail.getId(),
+                    BookingLogDes.CANCEL.getDescription());
         } else {
             throw new NotModifiedException("This booking can not be cancel anymore");
         }
         if (status.equals("SUCCESS")) {
-
-            System.out.println("send a notification to host that a success booking has been canceled");
+            LOG.info("send a notification to host that a success booking has been canceled");
         }
 
+    }
+
+    public List<BookingDetail> getAllBooking(long limit, long offset) {
+        return bookingRepository.findAllDetail(limit, offset).stream().map(this::mapToBookingDetail).toList();
+    }
+
+    public Long getTotal() {
+        return bookingRepository.getTotal();
     }
 
     @Scheduled(cron = "0 0 1 * * ?") // Runs daily at 1 AM
@@ -232,7 +260,7 @@ public class BookingService {
             throw new InvalidDateArgumentException();
         }
 
-        List<Date> queryDate = bookingRepository.findAllBookingDateOfProperty(propertyId);
+        List<Object[]> queryDate = bookingRepository.findAllBookingDateOfProperty(propertyId);
         List<Date> fillDate = Utils.fillDateRanges(queryDate);
 
 //        for (Date date : fillDate) {

@@ -2,6 +2,7 @@ package com.huy.airbnbserver.booking;
 
 import com.huy.airbnbserver.booking.converter.BookingDtoToBookingConverter;
 import com.huy.airbnbserver.booking.converter.BookingToBookingDtoConverter;
+import com.huy.airbnbserver.booking.dto.BookingDetail;
 import com.huy.airbnbserver.booking.dto.BookingDto;
 import com.huy.airbnbserver.booking.dto.BookingPageDto;
 import com.huy.airbnbserver.system.*;
@@ -13,9 +14,11 @@ import com.huy.airbnbserver.system.exception.InvalidSearchQueryException;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Objects;
 
 @RestController
@@ -25,6 +28,26 @@ public class BookingController {
     private final BookingService bookingService;
     private final BookingDtoToBookingConverter bookingDtoToBookingConverter;
     private final BookingToBookingDtoConverter bookingToBookingDtoConverter;
+
+    @PreAuthorize("hasRole('ROLE_admin')")
+    @GetMapping("/admin/bookings")
+    public Result getAllBookings(
+            @RequestParam(value = "page", required = false) Long page,
+            @RequestParam(value = "page_size", required = false) Long pageSize
+    ) {
+        pageSizeCheck(page, pageSize);
+        Page pageObject =  new Page(page,pageSize);
+        List<BookingDetail> bookingDetails = bookingService.getAllBooking(pageObject.getLimit(), pageObject.getOffset());
+        PageMetadata pageMetadata = new PageMetadata(
+                pageObject.getPage(),
+                pageObject.getPageSize(),
+                bookingService.getTotal());
+
+        return new Result(true, 200, "success", new BookingPageDto(
+                pageMetadata,
+                bookingDetails
+        ));
+    }
 
     @PostMapping("/properties/{propertyId}/bookings")
     public Result newBooking(
@@ -64,10 +87,7 @@ public class BookingController {
         pageSizeCheck(page,pageSize);
         Page pageObject =  new Page(page,pageSize);
         var bookingList = bookingService.getAllBookingByUserId(userId, pageObject.getLimit(), pageObject.getOffset());
-        var bookingDtoList = bookingList
-                .stream()
-                .map(bookingToBookingDtoConverter::convert)
-                .toList();
+
         PageMetadata pageMetadata = new PageMetadata(
                 pageObject.getPage(),
                 pageObject.getPageSize(),
@@ -76,7 +96,7 @@ public class BookingController {
                 true,
                 StatusCode.SUCCESS,
                 "Fetch all booking for user with id: " + userId,
-                new BookingPageDto(pageMetadata, bookingDtoList)
+                new BookingPageDto(pageMetadata, bookingList)
         );
     }
 
@@ -91,10 +111,6 @@ public class BookingController {
         Page pageObject =  new Page(page,pageSize);
         var bookingList = bookingService
                 .getAllBookingByPropertyId(propertyId, Utils.extractAuthenticationId(authentication), pageObject.getLimit(), pageObject.getOffset());
-        var bookingDtoList = bookingList
-                .stream()
-                .map(bookingToBookingDtoConverter::convert)
-                .toList();
         PageMetadata pageMetadata = new PageMetadata(
                 pageObject.getPage(),
                 pageObject.getPageSize(),
@@ -103,7 +119,7 @@ public class BookingController {
                 true,
                 StatusCode.SUCCESS,
                 "Fetch all booking for property with id: " + propertyId,
-                new BookingPageDto(pageMetadata, bookingDtoList)
+                new BookingPageDto(pageMetadata, bookingList)
         );
     }
 
@@ -167,6 +183,14 @@ public class BookingController {
     @GetMapping("/bookings/{id}")
     public Result getBookingDetail(@PathVariable Long id) {
         return new Result(true, 200, "Success", bookingService.findBookingDetail(id));
+    }
+
+    @GetMapping("/bookings/{id}/log")
+    public Result getBookingLog(@PathVariable Long id) {
+        return new Result(true,
+                200,
+                "Success",
+                bookingService.findBookingLog(id));
     }
 
     @GetMapping("/bookings/test")
