@@ -1,5 +1,7 @@
 package com.huy.airbnbserver.user;
 
+import com.huy.airbnbserver.image.ImageDto;
+import com.huy.airbnbserver.image.converter.ImageToImageDtoConverter;
 import com.huy.airbnbserver.notification.model.NotificationPreferences;
 import com.huy.airbnbserver.properties.PropertyService;
 import com.huy.airbnbserver.properties.converter.PropertyOverProjectionToPropertyOverProjectionDto;
@@ -43,6 +45,7 @@ public class UserController {
     private final PropertyService propertyService;
     private final PropertyOverProjectionToPropertyOverProjectionDto converter;
     private final ReportService reportService;
+    private final ImageToImageDtoConverter imageToImageDtoConverter;
 
     @PreAuthorize("hasRole('ROLE_admin')")
     @GetMapping
@@ -165,8 +168,8 @@ public class UserController {
             new Result(false, StatusCode.INVALID_ARGUMENT, "Too many images were provided, only accept 1");
         }
 
-        userService.assignAvatar(userId, files);
-        return new Result(true, 200, "Avatar upload success!");
+        ImageDto image = imageToImageDtoConverter.convert(userService.assignAvatar(userId, files));
+        return new Result(true, 200, "Avatar upload success!", image);
     }
 
     @PostMapping("/{userId}/report")

@@ -16,6 +16,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -42,6 +43,30 @@ public class BookingController {
                 pageObject.getPage(),
                 pageObject.getPageSize(),
                 bookingService.getTotal());
+
+        return new Result(true, 200, "success", new BookingPageDto(
+                pageMetadata,
+                bookingDetails
+        ));
+    }
+
+    @GetMapping("/users/{hostId}/hosted-booking")
+    public Result getHostedBooking(@PathVariable Integer hostId,
+                                   @RequestParam(value = "page", required = false) Long page,
+                                   @RequestParam(value = "page_size", required = false) Long pageSize,
+                                   @RequestParam(value = "filter", required = false) String filter,
+                                   Authentication authentication) {
+        pageSizeCheck(page, pageSize);
+        if (!hostId.equals(Utils.extractAuthenticationId(authentication))) {
+            throw new AccessDeniedException("this user is not allowed to take this action!");
+        }
+        Page pageObject =  new Page(page,pageSize);
+        List<BookingDetail> bookingDetails = bookingService.getAllBookingByHostId(hostId, filter, pageObject.getLimit(), pageObject.getOffset());
+        PageMetadata pageMetadata = new PageMetadata(
+                pageObject.getPage(),
+                pageObject.getPageSize(),
+                bookingService.getAllBookingByHostIdCount(hostId, filter)
+        );
 
         return new Result(true, 200, "success", new BookingPageDto(
                 pageMetadata,

@@ -66,15 +66,6 @@ public class BookingService {
         return bookingRepository.findByUserId(userId, limit, offset).stream().map(this::mapToBookingDetail).toList();
     }
 
-    public Long getAllBookingByUserIdCount(Integer userId) {
-        return bookingRepository.findTotalByUserId(userId);
-    }
-
-    public Long getAllBookingByPropertyIdCount(Long propertyId) {
-        return bookingRepository.getTotalBookingByPropertyId(propertyId);
-    }
-
-    @Transactional(readOnly = true)
     public List<BookingDetail> getAllBookingByPropertyId(Long propertyId, Integer userId, long limit, long offset) {
         var property = propertyRepository
                 .findById(propertyId)
@@ -83,6 +74,22 @@ public class BookingService {
             throw new AccessDeniedException("Access denied for this user");
         }
         return bookingRepository.findByPropertyId(propertyId, limit, offset).stream().map(this::mapToBookingDetail).toList();
+    }
+
+    public List<BookingDetail> getAllBookingByHostId(Integer hostId,String filter, long limit, long offset) {
+        return bookingRepository.findByHostId(hostId,filter, limit, offset).stream().map(this::mapToBookingDetail).toList();
+    }
+
+    public Long getAllBookingByUserIdCount(Integer userId) {
+        return bookingRepository.findTotalByUserId(userId);
+    }
+
+    public Long getAllBookingByPropertyIdCount(Long propertyId) {
+        return bookingRepository.getTotalBookingByPropertyId(propertyId);
+    }
+
+    public Long getAllBookingByHostIdCount(Integer hostId, String filter) {
+        return bookingRepository.getTotalBookingByHostId(hostId, filter);
     }
 
     public BookingDetail findBookingDetail(Long id) {
@@ -121,6 +128,10 @@ public class BookingService {
         bookingDetail.setIssuer_email((String) res[17]);
         bookingDetail.setIssuer_firstname((String) res[18]);
         bookingDetail.setIs_checked_out((Boolean) res[19]);
+        bookingDetail.setLongitude((BigDecimal) res[20]);
+        bookingDetail.setLatitude((BigDecimal) res[21]);
+        bookingDetail.setProperty_name((String) res[22]);
+        bookingDetail.setBooking_preview_img((String) res[23]);
 
         return bookingDetail;
     }

@@ -12,7 +12,6 @@ import lombok.*;
 @Setter
 @Builder
 @EqualsAndHashCode
-@Table(indexes = {@Index(name = "imgName_index", columnList = "name")})
 public class Image {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

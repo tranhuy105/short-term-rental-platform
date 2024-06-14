@@ -17,6 +17,14 @@ import java.util.Map;
 public class AdminService {
     private final AdminRepository adminRepository;
 
+    public void setAdminPrivilege(Integer userId) {
+        adminRepository.setAdminPrivilege(userId);
+    }
+
+    public void setUserPrivilege(Integer userId) {
+        adminRepository.setUserPrivilege(userId);
+    }
+
 
     public List<MonthlyRevenueDto> getRevenueInYear(int year) {
         return adminRepository.findRevenueInYear(year).stream().map(this::mapToRevenue).toList();

@@ -55,7 +55,7 @@ public class UserService {
     }
 
     @Transactional
-    public void assignAvatar(Integer id, List<MultipartFile> files) throws IOException {
+    public Image assignAvatar(Integer id, List<MultipartFile> files) throws IOException {
         var user = userRepository.findById(id).orElseThrow(()->new ObjectNotFoundException("user", id));
 
         Image preAvatar = user.getAvatar();
@@ -73,6 +73,8 @@ public class UserService {
 
             throw exception;
         }
+
+        return newImage;
     }
 
     @Transactional

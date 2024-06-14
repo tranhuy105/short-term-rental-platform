@@ -2,8 +2,11 @@ package com.huy.airbnbserver.admin;
 
 import com.huy.airbnbserver.admin.dto.BookingStatusCountProjection;
 import com.huy.airbnbserver.booking.Booking;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.lang.NonNull;
 
 import java.util.List;
 
@@ -70,4 +73,14 @@ public interface AdminRepository extends JpaRepository<Booking, Long> {
             "WHERE MONTH(b.check_in_date) = MONTH(DATE_SUB(CURRENT_DATE(), INTERVAL 1 MONTH)) AND YEAR(b.check_in_date) = YEAR(DATE_SUB(CURRENT_DATE(), INTERVAL 1 MONTH))) as lastMonthBookingCount",
             nativeQuery = true)
     List<Object[]> countUsersAndBookingsByCurrentAndLastMonth();
+
+    @Modifying
+    @Transactional
+    @Query(value = "UPDATE user_account SET roles = 'user admin' WHERE id = :userId",nativeQuery = true)
+    void setAdminPrivilege(@NonNull Integer userId);
+
+    @Modifying
+    @Transactional
+    @Query(value = "UPDATE user_account SET roles = 'user' WHERE id = :userId", nativeQuery = true)
+    void setUserPrivilege(@NonNull Integer userId);
 }

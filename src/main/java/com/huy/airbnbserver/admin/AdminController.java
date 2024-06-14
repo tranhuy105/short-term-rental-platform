@@ -122,6 +122,16 @@ public class AdminController {
         );
     }
 
+    @PutMapping("/admin/users/{userId}/set-admin")
+    public void setAdminPrivilege(@PathVariable Integer userId) {
+        adminService.setAdminPrivilege(userId);
+    }
+
+    @PutMapping("/admin/users/{userId}/set-user")
+    public void setUserPrivilege(@PathVariable Integer userId) {
+        adminService.setUserPrivilege(userId);
+    }
+
     private void pageSizeCheck(Long page, Long pageSize) {
         if (page != null && page < 1) {
             throw new InvalidSearchQueryException("Page must be greater than zero");
