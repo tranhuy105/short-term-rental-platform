@@ -26,6 +26,12 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Check(constraints = "check_in_date < check_out_date")
+@Table(name = "booking", indexes = {
+        @Index(name = "idx_booking_user_id", columnList = "user_id"),
+        @Index(name = "idx_booking_property_id", columnList = "property_id"),
+        @Index(name = "idx_booking_created_at", columnList = "created_at")
+
+})
 public class Booking{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -86,6 +92,7 @@ public class Booking{
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     @JsonManagedReference
+
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)

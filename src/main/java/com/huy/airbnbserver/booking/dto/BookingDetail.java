@@ -37,4 +37,6 @@ public class BookingDetail {
     private BigDecimal latitude;
     private String property_name;
     private String booking_preview_img;
+
+    private Boolean is_rated;
 }

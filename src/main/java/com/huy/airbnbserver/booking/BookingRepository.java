@@ -6,9 +6,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.lang.NonNull;
 
-import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query(value = """
@@ -36,7 +34,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
                 p.longitude,
                 p.latitude,
                 p.name,
-                img.url AS image_url
+                img.url AS image_url,
+                CASE WHEN r.booking_id IS NOT NULL THEN TRUE ELSE FALSE END AS is_rated
             FROM booking b
             LEFT JOIN property p ON b.property_id = p.id
             LEFT JOIN user_account u ON u.id = b.user_id
@@ -44,9 +43,9 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
                 SELECT i.id
                 FROM image i
                 WHERE i.property_id = p.id
-                ORDER BY i.id
                 LIMIT 1
             )
+            LEFT JOIN review r ON r.booking_id = b.id
             WHERE b.user_id = :userId
             ORDER BY b.created_at DESC LIMIT :limit OFFSET :offset""", nativeQuery = true)
     List<Object[]> findByUserId(Integer userId, long limit, long offset);
@@ -79,7 +78,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
                 p.longitude,
                 p.latitude,
                 p.name,
-                img.url AS image_url
+                img.url AS image_url,
+                CASE WHEN r.booking_id IS NOT NULL THEN TRUE ELSE FALSE END AS is_rated
             FROM booking b
             LEFT JOIN property p ON b.property_id = p.id
             LEFT JOIN user_account u ON u.id = b.user_id
@@ -87,9 +87,9 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
                 SELECT i.id
                 FROM image i
                 WHERE i.property_id = p.id
-                ORDER BY i.id
                 LIMIT 1
             )
+            LEFT JOIN review r ON r.booking_id = b.id
             WHERE b.property_id = :propertyId
             ORDER BY b.created_at DESC LIMIT :limit OFFSET :offset""", nativeQuery = true)
     List<Object[]> findByPropertyId(Long propertyId, long limit, long offset);
@@ -122,7 +122,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
                 p.longitude,
                 p.latitude,
                 p.name,
-                img.url AS image_url
+                img.url AS image_url,
+                CASE WHEN r.booking_id IS NOT NULL THEN TRUE ELSE FALSE END AS is_rated
             FROM booking b
             LEFT JOIN property p ON b.property_id = p.id
             LEFT JOIN user_account u ON u.id = b.user_id
@@ -130,9 +131,9 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
                 SELECT i.id
                 FROM image i
                 WHERE i.property_id = p.id
-                ORDER BY i.id
                 LIMIT 1
             )
+            LEFT JOIN review r ON r.booking_id = b.id
             WHERE p.host_id = :hostId
             AND (
                 :filter IS NULL
@@ -191,7 +192,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             p.longitude,
             p.latitude,
             p.name,
-            img.url AS image_url
+            img.url AS image_url,
+            CASE WHEN r.booking_id IS NOT NULL THEN TRUE ELSE FALSE END AS is_rated
         FROM booking b
         LEFT JOIN property p ON b.property_id = p.id
         LEFT JOIN user_account u ON u.id = b.user_id
@@ -199,9 +201,9 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
                 SELECT i.id
                 FROM image i
                 WHERE i.property_id = p.id
-                ORDER BY i.id
                 LIMIT 1
             )
+        LEFT JOIN review r ON r.booking_id = b.id
         WHERE b.id = :id""", nativeQuery = true)
     List<Object[]> findDetailById(@NonNull Long id);
 
@@ -230,7 +232,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             p.longitude,
             p.latitude,
             p.name,
-            img.url AS image_url
+            img.url AS image_url,
+            CASE WHEN r.booking_id IS NOT NULL THEN TRUE ELSE FALSE END AS is_rated
         FROM booking b
         LEFT JOIN property p ON b.property_id = p.id
         LEFT JOIN user_account u ON u.id = b.user_id
@@ -238,9 +241,9 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
                 SELECT i.id
                 FROM image i
                 WHERE i.property_id = p.id
-                ORDER BY i.id
                 LIMIT 1
             )
+        LEFT JOIN review r ON r.booking_id = b.id
         ORDER BY b.created_at DESC LIMIT :limit OFFSET :offset""", nativeQuery = true)
     List<Object[]> findAllDetail(long limit, long offset);
 
@@ -287,7 +290,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     @Modifying
     @Query(value = "INSERT INTO booking_log (description, event_timestamp, event_type, booking_id) VALUES " +
-            "(:des, CONVERT_TZ(NOW(), 'UTC', '+07:00'), :type, :bookingId)",nativeQuery = true)
+            "(:des, CONVERT_TZ(CURRENT_TIMESTAMP, '+00:00', '+07:00'), :type, :bookingId)",nativeQuery = true)
     void log(@NonNull String type,
              @NonNull Long bookingId,
              @NonNull String des);

@@ -45,17 +45,13 @@ public class BookingService {
         booking.setStatus(BookingStatus.PENDING.toString());
         booking.setIsCheckedOut(false);
 
-        BookingLog log = new BookingLog();
-        log.setEventType(BookingStatus.PENDING.toString());
-        log.setDescription(BookingLogDes.CREATED.getDescription());
-
-        booking.addLog(log);
         var newBooking = bookingRepository.save(booking);
+        bookingRepository.log(BookingStatus.PENDING.toString(), newBooking.getId(), BookingLogDes.CREATED.getDescription());
         eventPublisher.publishSendingNotificationEvent(
                 property.getHost().getId(),
                 propertyId,
                 "Your property has a new booking! click to see in more detail.",
-                NotificationRefType.BOOKING.name()
+                NotificationRefType.PROPERTY.name()
         );
         return newBooking;
     }
@@ -132,6 +128,7 @@ public class BookingService {
         bookingDetail.setLatitude((BigDecimal) res[21]);
         bookingDetail.setProperty_name((String) res[22]);
         bookingDetail.setBooking_preview_img((String) res[23]);
+        bookingDetail.setIs_rated((Long) res[24] == 1L);
 
         return bookingDetail;
     }
@@ -208,8 +205,8 @@ public class BookingService {
             eventPublisher.publishSendingNotificationEvent(
                     bookingDetail.getIssuer_id(),
                     bookingId,
-                    "Congratulation, your trip is not completed, " +
-                            "please consider leave a review for the property to help other user",
+                    "Congratulation, your trip is now completed, " +
+                            "consider leave a review to help other user as well.",
                     NotificationRefType.BOOKING.name()
             );
             // host get the remaining 50%
@@ -253,9 +250,16 @@ public class BookingService {
         LOG.info("Auto Detect No-Show Booking Executed, Sending Notification To All Host...");
         var bookingIds = bookingRepository.findPendingCheckoutsPastEndDate();
         bookingIds.forEach(objects -> {
-            // objects[0] = bookingId
-            // objects[1] = hostId
-            LOG.info("Potential No-Show Booking: {id:{}, hostId:{}}", objects[0], objects[1]);
+             Long bookingId = (Long) objects[0];
+             Integer hostId = (Integer) objects[1];
+            LOG.info("Potential No-Show Booking: {id:{}, hostId:{}}", bookingId, hostId);
+            eventPublisher.publishSendingNotificationEvent(
+                    hostId,
+                    bookingId,
+                    "We have notified a booking that hasn't been marked as checked out although the check_out day is pass. "
+                    +" Please review this again.",
+                    NotificationRefType.BOOKING.name()
+            );
             // send a notification ask if the user hasn't showed up
             // or if they forgot to set the is_checked_out to be true
         });

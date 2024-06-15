@@ -98,7 +98,7 @@ public class BookingEventListener {
     @Transactional
     public void handleBookingRejectEvent(BookingRejectEvent event) {
         var booking = event.getBooking();
-        booking.setStatus(BookingStatus.REJECTED.toString());
+        bookingRepository.updateStatus(BookingStatus.REJECTED.toString(), booking.getId());
         bookingRepository.log(
                 BookingStatus.REJECTED.toString(),
                 booking.getId(),
