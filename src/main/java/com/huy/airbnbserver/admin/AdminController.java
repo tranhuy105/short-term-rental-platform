@@ -64,6 +64,25 @@ public class AdminController {
         return new Result(true, 200, "Get all reported users", new ReportPageDto(pageMetadata, reportDtoList));
     }
 
+    @GetMapping("/admin/host-request")
+    public Result findAllHostRequest(
+            @RequestParam(value = "page", required = false) Long page,
+            @RequestParam(value = "page_size", required = false) Long pageSize
+    ) {
+        pageSizeCheck(page,pageSize);
+        Page pageObject =  new Page(page,pageSize);
+        List<ReportDto> reportDtoList = reportService.findAllHostRequest(
+                pageObject.getLimit(),
+                pageObject.getOffset());
+        PageMetadata pageMetadata = new PageMetadata(
+                pageObject.getPage(),
+                pageObject.getPageSize(),
+                reportDtoList.isEmpty() ? 0 : reportDtoList.get(0).total_count()
+        );
+
+        return new Result(true, 200, "Get all reported users", new ReportPageDto(pageMetadata, reportDtoList));
+    }
+
     @PutMapping("/admin/report/{reportId}")
     public Result resolveReport(@PathVariable Long reportId) {
         reportService.resolveReport(reportId);
@@ -131,6 +150,9 @@ public class AdminController {
     public void setUserPrivilege(@PathVariable Integer userId) {
         adminService.setUserPrivilege(userId);
     }
+
+    @PutMapping("/admin/users/{userId}/set-host")
+    public void setHostPrivilege(@PathVariable Integer userId) {adminService.setHostPrivilege(userId); }
 
     private void pageSizeCheck(Long page, Long pageSize) {
         if (page != null && page < 1) {

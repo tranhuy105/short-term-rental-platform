@@ -128,7 +128,7 @@ public class BookingService {
         bookingDetail.setLatitude((BigDecimal) res[21]);
         bookingDetail.setProperty_name((String) res[22]);
         bookingDetail.setBooking_preview_img((String) res[23]);
-        bookingDetail.setIs_rated((Long) res[24] == 1L);
+        bookingDetail.setIs_rated(res[24] != null);
 
         return bookingDetail;
     }

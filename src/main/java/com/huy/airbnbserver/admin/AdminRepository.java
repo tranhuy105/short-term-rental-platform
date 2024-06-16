@@ -76,8 +76,13 @@ public interface AdminRepository extends JpaRepository<Booking, Long> {
 
     @Modifying
     @Transactional
-    @Query(value = "UPDATE user_account SET roles = 'user admin' WHERE id = :userId",nativeQuery = true)
+    @Query(value = "UPDATE user_account SET roles = 'user host admin' WHERE id = :userId",nativeQuery = true)
     void setAdminPrivilege(@NonNull Integer userId);
+
+    @Modifying
+    @Transactional
+    @Query(value = "UPDATE user_account SET roles = 'user host' WHERE id = :userId",nativeQuery = true)
+    void setHostPrivilege(@NonNull Integer userId);
 
     @Modifying
     @Transactional

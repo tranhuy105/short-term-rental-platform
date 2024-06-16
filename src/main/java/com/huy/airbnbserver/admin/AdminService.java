@@ -3,6 +3,8 @@ package com.huy.airbnbserver.admin;
 import com.huy.airbnbserver.admin.dto.BookingStatusCountProjection;
 import com.huy.airbnbserver.admin.dto.DailyRevenueDto;
 import com.huy.airbnbserver.admin.dto.MonthlyRevenueDto;
+import com.huy.airbnbserver.system.event.EventPublisher;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +18,7 @@ import java.util.Map;
 @Service
 public class AdminService {
     private final AdminRepository adminRepository;
+    private final EventPublisher eventPublisher;
 
     public void setAdminPrivilege(Integer userId) {
         adminRepository.setAdminPrivilege(userId);
@@ -68,5 +71,11 @@ public class AdminService {
         res.put("last_month_booking", lastMonthBookingCount);
 
         return res;
+    }
+
+    @Transactional
+    public void setHostPrivilege(Integer userId) {
+        adminRepository.setHostPrivilege(userId);
+        eventPublisher.publishSendingNotificationEvent(userId, userId.longValue(), "Congratulations, you are now a host!" , "USER");
     }
 }

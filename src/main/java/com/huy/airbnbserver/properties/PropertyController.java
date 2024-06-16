@@ -20,6 +20,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -181,6 +182,7 @@ public class PropertyController {
     @PostMapping(path = "/properties",
             consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_JSON_VALUE})
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ROLE_host')")
     public Result save(@RequestParam(value = "images", required = false) List<MultipartFile> images,
                        @Valid @RequestParam(value = "propertyDetailDto") String propertyDetailDtoString,
                        Authentication authentication) throws IOException {
@@ -206,6 +208,7 @@ public class PropertyController {
     }
 
     @PutMapping("/properties/{propertyId}")
+    @PreAuthorize("hasRole('ROLE_host')")
     public Result update(@RequestParam(value = "images", required = false) List<MultipartFile> images,
                          @RequestParam(value = "propertyDetailDto") String propertyDetailDtoString,
                          @RequestParam(value = "instruction", required = false) String instructionString,
@@ -235,6 +238,7 @@ public class PropertyController {
 
 
     @DeleteMapping("/properties/{propertyId}")
+    @PreAuthorize("hasRole('ROLE_host')")
     public Result delete(@Valid @PathVariable Long propertyId, Authentication authentication) throws IOException {
         propertyService.delete(propertyId, Utils.extractAuthenticationId(authentication));
         return new Result(true, StatusCode.SUCCESS, "delete successful");

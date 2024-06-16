@@ -211,4 +211,11 @@ public class UserController {
                 userService.getNotificationPreference(userId)
         );
     }
+
+    @PostMapping("/host-request")
+    @PreAuthorize("!hasRole('ROLE_host')")
+    public Result requestToBeHost(Authentication authentication) {
+        reportService.hostRequest(Utils.extractAuthenticationId(authentication));
+        return new Result(true, 200, "Request success, please comeback again while admin review your request");
+    }
 }

@@ -35,7 +35,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
                 p.latitude,
                 p.name,
                 img.url AS image_url,
-                CASE WHEN r.booking_id IS NOT NULL THEN TRUE ELSE FALSE END AS is_rated
+                r.booking_id
             FROM booking b
             LEFT JOIN property p ON b.property_id = p.id
             LEFT JOIN user_account u ON u.id = b.user_id
@@ -79,7 +79,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
                 p.latitude,
                 p.name,
                 img.url AS image_url,
-                CASE WHEN r.booking_id IS NOT NULL THEN TRUE ELSE FALSE END AS is_rated
+                r.booking_id
             FROM booking b
             LEFT JOIN property p ON b.property_id = p.id
             LEFT JOIN user_account u ON u.id = b.user_id
@@ -123,7 +123,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
                 p.latitude,
                 p.name,
                 img.url AS image_url,
-                CASE WHEN r.booking_id IS NOT NULL THEN TRUE ELSE FALSE END AS is_rated
+                r.booking_id
             FROM booking b
             LEFT JOIN property p ON b.property_id = p.id
             LEFT JOIN user_account u ON u.id = b.user_id
@@ -193,7 +193,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             p.latitude,
             p.name,
             img.url AS image_url,
-            CASE WHEN r.booking_id IS NOT NULL THEN TRUE ELSE FALSE END AS is_rated
+            r.booking_id
         FROM booking b
         LEFT JOIN property p ON b.property_id = p.id
         LEFT JOIN user_account u ON u.id = b.user_id
@@ -233,7 +233,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             p.latitude,
             p.name,
             img.url AS image_url,
-            CASE WHEN r.booking_id IS NOT NULL THEN TRUE ELSE FALSE END AS is_rated
+            r.booking_id
         FROM booking b
         LEFT JOIN property p ON b.property_id = p.id
         LEFT JOIN user_account u ON u.id = b.user_id

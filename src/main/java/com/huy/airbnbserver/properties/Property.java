@@ -30,7 +30,8 @@
     @Table(name = "property", indexes = {
             @Index(name = "idx_property_host_id", columnList = "host_id"),
             @Index(name = "idx_property_nightly_price", columnList = "nightly_price"),
-            @Index(name = "idx_property_updated_at", columnList = "updated_at")
+            @Index(name = "idx_property_updated_at", columnList = "updated_at"),
+            @Index(name = "idx_property_average_rating", columnList = "average_rating")
     })
     public class Property implements ReportableEntity {
         @Id

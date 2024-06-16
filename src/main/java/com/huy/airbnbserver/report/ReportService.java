@@ -31,6 +31,17 @@ public class ReportService {
     }
 
     @Transactional
+    public void hostRequest(Integer userId) {
+        reportRepository.saveReport(
+                userId,
+                "TECHNICAL_ISSUES",
+                "This user has request to be a host",
+                false,
+                userId.longValue(),
+                "Host");
+    }
+
+    @Transactional
     public void resolveReport(Long reportId) {
         Report report = reportRepository.findById(reportId).orElseThrow(
                 () -> new ObjectNotFoundException("report", reportId)
@@ -56,6 +67,14 @@ public class ReportService {
                 .map(this::mapToReportDto)
                 .toList();
     }
+
+    public List<ReportDto> findAllHostRequest(long limit, long offset) {
+        return reportRepository.getAllHostRequest(limit, offset)
+                .stream()
+                .map(this::mapToReportDto)
+                .toList();
+    }
+
     private ReportDto mapToReportDto(ReportProjection reportProjection) {
         return new ReportDto(
                 reportProjection.getId(),
