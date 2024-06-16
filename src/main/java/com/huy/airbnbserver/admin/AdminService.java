@@ -78,9 +78,8 @@ public class AdminService {
 
     @Transactional
     public void setHostPrivilege(Long roleRequestId, Integer userId, Boolean isConfirm, Integer reviewerId) {
-        adminRepository.reviewRoleRequest(roleRequestId, reviewerId, isConfirm ? "accept" : "reject");
+        adminRepository.reviewRoleRequestAndSetPrivilege(roleRequestId, userId, isConfirm, reviewerId);
         if (isConfirm) {
-            adminRepository.setHostPrivilege(userId);
             eventPublisher.publishSendingNotificationEvent(userId, userId.longValue(), "Congratulations, you are now a host!" , "USER");
         }
     }
@@ -108,5 +107,9 @@ public class AdminService {
                 (Date) source[6],
                 (Long) source[7]
         );
+    }
+
+    public void resolveReport(Long reportId, Boolean isBan) {
+        adminRepository.resolveReportAndConditionalBanUser(reportId, isBan);
     }
 }

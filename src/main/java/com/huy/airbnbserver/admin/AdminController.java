@@ -82,10 +82,11 @@ public class AdminController {
     }
 
     @PutMapping("/admin/report/{reportId}")
-    public Result resolveReport(@PathVariable Long reportId) {
-        reportService.resolveReport(reportId);
+    public Result resolveReport(@PathVariable Long reportId, @RequestParam("ban") Boolean isBan) {
+        adminService.resolveReport(reportId, isBan);
         return new Result(true, 200, "Report resolved successfully");
     }
+
 
     @PutMapping("/admin/users/{userId}/ban")
     public Result banUser(@PathVariable Integer userId) {

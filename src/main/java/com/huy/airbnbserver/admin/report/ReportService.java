@@ -29,18 +29,6 @@ public class ReportService {
                 reportedUserId);
     }
 
-
-    @Transactional
-    public void resolveReport(Long reportId) {
-        Report report = reportRepository.findById(reportId).orElseThrow(
-                () -> new ObjectNotFoundException("report", reportId)
-        );
-        if (report.getIsResolved()) {
-            throw new UnprocessableEntityException("This report has already been resolved");
-        }
-        reportRepository.resolveReport(reportId);
-    }
-
 //    public List<ReportDto> findAllPropertyReports(long limit, long offset) {
 //        return reportRepository.
 //                getAllPropertyReports(limit, offset)
