@@ -1,13 +1,14 @@
-package com.huy.airbnbserver.report;
+package com.huy.airbnbserver.admin.report;
 
-import com.huy.airbnbserver.report.dto.ReportDto;
-import com.huy.airbnbserver.report.dto.ReportProjection;
+import com.huy.airbnbserver.admin.report.dto.ReportDto;
+import com.huy.airbnbserver.admin.report.dto.ReportProjection;
 import com.huy.airbnbserver.system.exception.ObjectNotFoundException;
 import com.huy.airbnbserver.system.exception.UnprocessableEntityException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -19,27 +20,15 @@ public class ReportService {
     public void createReport(Integer reporterId,
                              Issue issue,
                              String detail,
-                             Long reportEntityId,
-                             String reportType) {
+                             Integer reportedUserId) {
         reportRepository.saveReport(
                 reporterId,
                 issue.name(),
                 detail,
                 false,
-                reportEntityId,
-                reportType);
+                reportedUserId);
     }
 
-    @Transactional
-    public void hostRequest(Integer userId) {
-        reportRepository.saveReport(
-                userId,
-                "TECHNICAL_ISSUES",
-                "This user has request to be a host",
-                false,
-                userId.longValue(),
-                "Host");
-    }
 
     @Transactional
     public void resolveReport(Long reportId) {
@@ -52,24 +41,41 @@ public class ReportService {
         reportRepository.resolveReport(reportId);
     }
 
-    public List<ReportDto> findAllPropertyReports(long limit, long offset) {
-        return reportRepository.
-                getAllPropertyReports(limit, offset)
+//    public List<ReportDto> findAllPropertyReports(long limit, long offset) {
+//        return reportRepository.
+//                getAllPropertyReports(limit, offset)
+//                .stream()
+//                .map(this::mapToReportDto)
+//                .toList();
+//        return new ArrayList<>();
+//    }
+//
+//    public List<ReportDto> findAllUserReports(long limit, long offset) {
+//        return reportRepository.
+//                getALlUserReports(limit, offset)
+//                .stream()
+//                .map(this::mapToReportDto)
+//                .toList();
+//        return new ArrayList<>();
+//    }
+//
+//    public List<ReportDto> findAllHostRequest(long limit, long offset) {
+//        return reportRepository.getAllHostRequest(limit, offset)
+//                .stream()
+//                .map(this::mapToReportDto)
+//                .toList();
+//        return new ArrayList<>();
+//    }
+
+    public List<ReportDto> findAllResolvedReports(long limit, long offset) {
+        return reportRepository.getAllResolvedReports(limit, offset)
                 .stream()
                 .map(this::mapToReportDto)
                 .toList();
     }
 
-    public List<ReportDto> findAllUserReports(long limit, long offset) {
-        return reportRepository.
-                getALlUserReports(limit, offset)
-                .stream()
-                .map(this::mapToReportDto)
-                .toList();
-    }
-
-    public List<ReportDto> findAllHostRequest(long limit, long offset) {
-        return reportRepository.getAllHostRequest(limit, offset)
+    public List<ReportDto> findAllReports(long limit, long offset) {
+        return reportRepository.getAllReports(limit, offset)
                 .stream()
                 .map(this::mapToReportDto)
                 .toList();
@@ -83,18 +89,9 @@ public class ReportService {
                 reportProjection.getDetail(),
                 reportProjection.getIssue(),
                 reportProjection.getIsResolved(),
-                new ReportableEntity() {
-                    @Override
-                    public Long getEntityId() {
-                        return reportProjection.getReportEntityId();
-                    }
-
-                    @Override
-                    public String getType() {
-                        return reportProjection.getReportType();
-                    }
-                },
+                reportProjection.getReportedUserId(),
                 reportProjection.getTotalCount()
         );
+
     }
 }

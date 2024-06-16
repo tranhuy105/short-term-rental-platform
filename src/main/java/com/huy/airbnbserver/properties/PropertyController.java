@@ -8,9 +8,7 @@ import com.huy.airbnbserver.properties.dto.*;
 import com.huy.airbnbserver.properties.enm.*;
 import com.huy.airbnbserver.properties.converter.PropertyDetailDtoToPropertyConverter;
 import com.huy.airbnbserver.properties.converter.PropertyToPropertyDetailDtoConverter;
-import com.huy.airbnbserver.report.Issue;
-import com.huy.airbnbserver.report.ReportService;
-import com.huy.airbnbserver.report.dto.ReportDto;
+import com.huy.airbnbserver.admin.report.ReportService;
 import com.huy.airbnbserver.system.*;
 import com.huy.airbnbserver.system.common.*;
 import com.huy.airbnbserver.system.exception.InvalidSearchQueryException;
@@ -307,24 +305,5 @@ public class PropertyController {
                 pageData,
                 propertyDetailDtos
         ));
-    }
-
-    @PostMapping("/properties/{propertyId}/report")
-    public Result reportProperty(@PathVariable Long propertyId,
-                                 @Valid @RequestBody ReportDto reportDto,
-                                 Authentication authentication) {
-        System.out.println(reportDto.detail() +" "+ reportDto.issue());
-        Issue issue = Issue.valueOf(reportDto.issue());
-        Property reportedProperty = propertyService.findByIdLazy(propertyId);
-
-        reportService.createReport(
-                Utils.extractAuthenticationId(authentication),
-                issue,
-                reportDto.detail(),
-                reportedProperty.getEntityId(),
-                reportedProperty.getType()
-        );
-
-        return new Result(true, 200, "Success");
     }
  }

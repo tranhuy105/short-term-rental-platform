@@ -2,6 +2,7 @@ package com.huy.airbnbserver.admin;
 
 import com.huy.airbnbserver.admin.dto.BookingStatusCountProjection;
 import com.huy.airbnbserver.booking.Booking;
+import com.huy.airbnbserver.user.model.RoleRequest;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -88,4 +89,33 @@ public interface AdminRepository extends JpaRepository<Booking, Long> {
     @Transactional
     @Query(value = "UPDATE user_account SET roles = 'user' WHERE id = :userId", nativeQuery = true)
     void setUserPrivilege(@NonNull Integer userId);
+
+    @Modifying
+    @Transactional
+    @Query(value = "INSERT INTO role_request (created_at, status, requested_role, user_id) VALUES " +
+            "(CURRENT_TIMESTAMP, 'pending' , 'HOST', :userId)",nativeQuery = true)
+    void saveRoleRequest(@NonNull Integer userId);
+
+    @Modifying
+    @Transactional
+    @Query(value = "UPDATE role_request SET " +
+            "reviewed_by = :reviewerId, " +
+            "reviewed_at = CURRENT_TIMESTAMP, " +
+            "status = :status " +
+            "WHERE id = :requestId", nativeQuery = true)
+    void reviewRoleRequest(@NonNull Long requestId, @NonNull Integer reviewerId, @NonNull String status);
+
+    @Query(value = "SELECT " +
+            "id, " +
+            "user_id, " +
+            "requested_role, " +
+            "created_at, " +
+            "status, " +
+            "reviewed_by, " +
+            "reviewed_at," +
+            "COUNT(*) OVER() " +
+            "FROM role_request " +
+            "ORDER BY id DESC " +
+            "LIMIT :limit OFFSET :offset", nativeQuery = true)
+    List<Object[]> findAllHostRequest(long limit, long offset);
 }
