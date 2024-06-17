@@ -86,7 +86,7 @@ public class UserController {
                 .stream()
                 .map(converter::convert)
                 .toList();
-        var userDto = userToUserDtoConverter.convert(user);
+        var userDto = userToUserDetailDtoConverter.convert(user);
         return new Result(true, StatusCode.SUCCESS, "Success",
                 new UserWithPropertyDto(userDto,topProperties));
     }

@@ -5,15 +5,36 @@ import com.huy.airbnbserver.properties.dto.ReviewInfoProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.query.Procedure;
 import org.springframework.data.repository.query.Param;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
 
 public interface PropertyRepository extends JpaRepository<Property, Long> {
+
+    @Procedure(name = "SavePropertyWithImagesAndCategories")
+    void savePropertyWithImagesAndCategories(
+            @Param("p_host_id") Integer hostId,
+            @Param("p_address_line") String addressLine,
+            @Param("p_description") String description,
+            @Param("p_latitude") BigDecimal latitude,
+            @Param("p_longitude") BigDecimal longitude,
+            @Param("p_max_guests") Integer maxGuests,
+            @Param("p_name") String name,
+            @Param("p_nightly_price") BigDecimal nightlyPrice,
+            @Param("p_num_bathrooms") Integer numBathrooms,
+            @Param("p_num_bedrooms") Integer numBedrooms,
+            @Param("p_num_beds") Integer numBeds,
+            @Param("p_tag") String tag,
+            @Param("p_image_names") String imageNames,
+            @Param("p_image_urls") String imageUrls,
+            @Param("p_categories") String categories
+    );
 
     @NonNull
     @Query(value = "SELECT * FROM property p WHERE p.id = :id", nativeQuery = true)
