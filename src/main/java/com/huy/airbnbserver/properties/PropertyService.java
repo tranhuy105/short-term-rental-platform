@@ -77,7 +77,57 @@ public class PropertyService {
             }
             throw e;
         }
+    }
 
+    @Transactional
+    public void procedureSave(Property property, Integer userId, List<MultipartFile> images) throws IOException {
+        List<Image> savedImages = new ArrayList<>();
+
+        try {
+            if (images != null) {
+                for (MultipartFile image : images) {
+                    var saveImage = awsBucketService.uploadFile(image, property);
+                    savedImages.add(saveImage);
+                }
+            }
+
+            // Convert image names and URLs to comma-separated strings
+            String imageNames = savedImages.stream()
+                    .map(Image::getName)
+                    .collect(Collectors.joining(","));
+            String imageUrls = savedImages.stream()
+                    .map(Image::getUrl)
+                    .collect(Collectors.joining(","));
+
+            // Convert categories to comma-separated string
+            String categories = property.getCategories().stream()
+                    .map(Objects::toString)
+                    .collect(Collectors.joining(","));
+
+
+            propertyRepository.savePropertyWithImagesAndCategories(
+                    userId,
+                    property.getAddressLine(),
+                    property.getDescription(),
+                    property.getLatitude(),
+                    property.getLongitude(),
+                    property.getMaxGuests(),
+                    property.getName(),
+                    property.getNightlyPrice(),
+                    property.getNumBathrooms(),
+                    property.getNumBedrooms(),
+                    property.getNumBeds(),
+                    property.getTag().toString(),
+                    imageNames,
+                    imageUrls,
+                    categories
+            );
+        } catch (Exception exception) {
+            for (Image image : savedImages) {
+                awsBucketService.deleteFile(image);
+            }
+            throw exception;
+        }
     }
 
     @Transactional
@@ -135,12 +185,12 @@ public class PropertyService {
             savedProperty.setAddressLine(property.getAddressLine());
 
             propertyRepository.save(savedProperty);
-            // Commit Firebase changes only after successful database transaction
+            // Commit changes only after successful database transaction
             for (Image image : imagesToMarkForDeletion) {
                 awsBucketService.deleteFile(image);
             }
         } catch (Exception e) {
-            // Rollback Firebase actions if saving the property fails
+            // Rollback actions if saving the property fails
             for (Image image : newlySavedImages) {
                 awsBucketService.deleteFile(image);
             }

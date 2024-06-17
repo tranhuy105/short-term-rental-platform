@@ -4,6 +4,7 @@ import com.huy.airbnbserver.booking.dto.BookingLogProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.query.Procedure;
 import org.springframework.lang.NonNull;
 
 import java.util.List;
@@ -297,4 +298,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     @Query(value = "SELECT event_type AS type, event_timestamp AS time, description FROM booking_log WHERE booking_id = :bookingId",nativeQuery = true)
     List<BookingLogProjection> getLog(@NonNull Long bookingId);
+
+    @Procedure(name = "UpdateBookingStatusAndLog")
+    void updateBookingStatusAndLog(Long bookingId, String newStatus, String logDescription);
 }

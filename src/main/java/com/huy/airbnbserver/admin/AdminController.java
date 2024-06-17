@@ -1,9 +1,12 @@
 package com.huy.airbnbserver.admin;
 
+import com.huy.airbnbserver.admin.dto.RoleRequestDto;
+import com.huy.airbnbserver.admin.dto.RoleRequestPage;
 import com.huy.airbnbserver.properties.PropertyService;
-import com.huy.airbnbserver.report.ReportService;
-import com.huy.airbnbserver.report.dto.ReportDto;
-import com.huy.airbnbserver.report.dto.ReportPageDto;
+import com.huy.airbnbserver.admin.report.ReportService;
+import com.huy.airbnbserver.admin.report.dto.ReportDto;
+import com.huy.airbnbserver.admin.report.dto.ReportPageDto;
+import com.huy.airbnbserver.system.Utils;
 import com.huy.airbnbserver.system.common.Page;
 import com.huy.airbnbserver.system.common.PageMetadata;
 import com.huy.airbnbserver.system.common.Result;
@@ -11,6 +14,7 @@ import com.huy.airbnbserver.system.exception.InvalidSearchQueryException;
 import com.huy.airbnbserver.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -26,42 +30,36 @@ public class AdminController {
     private final PropertyService propertyService;
     private final AdminService adminService;
 
-    @GetMapping("/admin/reported-properties")
+    @GetMapping("/admin/report")
     public Result findAllReportedProperty(
             @RequestParam(value = "page", required = false) Long page,
-            @RequestParam(value = "page_size", required = false) Long pageSize
+            @RequestParam(value = "page_size", required = false) Long pageSize,
+            @RequestParam(value = "resolve", required = false) Boolean isResolve
     ) {
+        if (isResolve == null) {
+            isResolve = false;
+        }
+
+
         pageSizeCheck(page,pageSize);
         Page pageObject =  new Page(page,pageSize);
-        List<ReportDto> reportDtoList = reportService.findAllPropertyReports(
-                pageObject.getLimit(),
-                pageObject.getOffset());
+        List<ReportDto> reportDtoList;
+        if (!isResolve) {
+            reportDtoList = reportService.findAllReports(
+                    pageObject.getLimit(),
+                    pageObject.getOffset());
+        } else {
+            reportDtoList = reportService.findAllResolvedReports(
+                    pageObject.getLimit(),
+                    pageObject.getOffset());
+        }
         PageMetadata pageMetadata = new PageMetadata(
                 pageObject.getPage(),
                 pageObject.getPageSize(),
                 reportDtoList.isEmpty() ? 0 : reportDtoList.get(0).total_count()
         );
 
-        return new Result(true, 200, "Get all reported properties", new ReportPageDto(pageMetadata, reportDtoList));
-    }
-
-    @GetMapping("/admin/reported-users")
-    public Result findAllReportedUser(
-            @RequestParam(value = "page", required = false) Long page,
-            @RequestParam(value = "page_size", required = false) Long pageSize
-    ) {
-        pageSizeCheck(page,pageSize);
-        Page pageObject =  new Page(page,pageSize);
-        List<ReportDto> reportDtoList = reportService.findAllUserReports(
-                pageObject.getLimit(),
-                pageObject.getOffset());
-        PageMetadata pageMetadata = new PageMetadata(
-                pageObject.getPage(),
-                pageObject.getPageSize(),
-                reportDtoList.isEmpty() ? 0 : reportDtoList.get(0).total_count()
-        );
-
-        return new Result(true, 200, "Get all reported users", new ReportPageDto(pageMetadata, reportDtoList));
+        return new Result(true, 200, "Get all report", new ReportPageDto(pageMetadata, reportDtoList));
     }
 
     @GetMapping("/admin/host-request")
@@ -71,7 +69,7 @@ public class AdminController {
     ) {
         pageSizeCheck(page,pageSize);
         Page pageObject =  new Page(page,pageSize);
-        List<ReportDto> reportDtoList = reportService.findAllHostRequest(
+        List<RoleRequestDto> reportDtoList = adminService.findAllHostRequest(
                 pageObject.getLimit(),
                 pageObject.getOffset());
         PageMetadata pageMetadata = new PageMetadata(
@@ -80,14 +78,15 @@ public class AdminController {
                 reportDtoList.isEmpty() ? 0 : reportDtoList.get(0).total_count()
         );
 
-        return new Result(true, 200, "Get all reported users", new ReportPageDto(pageMetadata, reportDtoList));
+        return new Result(true, 200, "Get all reported users", new RoleRequestPage(pageMetadata, reportDtoList));
     }
 
     @PutMapping("/admin/report/{reportId}")
-    public Result resolveReport(@PathVariable Long reportId) {
-        reportService.resolveReport(reportId);
+    public Result resolveReport(@PathVariable Long reportId, @RequestParam("ban") Boolean isBan) {
+        adminService.resolveReport(reportId, isBan);
         return new Result(true, 200, "Report resolved successfully");
     }
+
 
     @PutMapping("/admin/users/{userId}/ban")
     public Result banUser(@PathVariable Integer userId) {
@@ -151,8 +150,19 @@ public class AdminController {
         adminService.setUserPrivilege(userId);
     }
 
-    @PutMapping("/admin/users/{userId}/set-host")
-    public void setHostPrivilege(@PathVariable Integer userId) {adminService.setHostPrivilege(userId); }
+    @PutMapping("/admin/users/{userId}/set-host/{roleRequestId}")
+    public void setHostPrivilege(@PathVariable Integer userId,
+                                 @RequestParam("confirm") Boolean isConfirm,
+                                 @PathVariable Long roleRequestId,
+                                 Authentication authentication
+    ) {
+        adminService.setHostPrivilege(
+                roleRequestId,
+                userId,
+                isConfirm,
+                Utils.extractAuthenticationId(authentication)
+        );
+    }
 
     private void pageSizeCheck(Long page, Long pageSize) {
         if (page != null && page < 1) {
