@@ -17,7 +17,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -101,7 +100,7 @@ public class AdminController {
     }
 
     @DeleteMapping("/admin/properties/{propertyId}")
-    public Result deleteProperty(@PathVariable Long propertyId) throws IOException {
+    public Result deleteProperty(@PathVariable Long propertyId) {
         propertyService.delete(propertyId, -1);
         return new Result(true, 200, "delete property with id "+propertyId);
     }

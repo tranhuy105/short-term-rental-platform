@@ -9,6 +9,7 @@ import com.huy.airbnbserver.properties.enm.*;
 import com.huy.airbnbserver.properties.dto.PropertyOverviewProjection;
 import com.huy.airbnbserver.system.common.SortDirection;
 import com.huy.airbnbserver.system.event.EventPublisher;
+import com.huy.airbnbserver.system.event.ui.NotificationRefType;
 import com.huy.airbnbserver.system.exception.EntityAlreadyExistException;
 import com.huy.airbnbserver.system.exception.ObjectNotFoundException;
 import com.huy.airbnbserver.user.model.User;
@@ -33,6 +34,7 @@ public class PropertyService {
     private final AWSBucketService awsBucketService;
     private final NativePropertyRepository nativePropertyRepository;
     private final ImageRepository imageRepository;
+    private final EventPublisher eventPublisher;
 
     public Property findById(Long id) {
         List<Object[]> res = propertyRepository.findDetailByIdNative(id);
@@ -199,11 +201,19 @@ public class PropertyService {
 
 
     @Transactional
-    public void delete(Long id, Integer userId) throws IOException {
+    public void delete(Long id, Integer userId){
         var deletedProperty = propertyRepository.findById(id).orElseThrow(() -> new ObjectNotFoundException("property", id));
 
         if (!userId.equals(deletedProperty.getHost().getId()) && userId != -1) {
             throw new AccessDeniedException("This user dont have access to this resource");
+        }
+
+        // admin delete then publish a notification
+        if (userId.equals(-1)) {
+            eventPublisher.publishSendingNotificationEvent(deletedProperty.getHost().getId(),
+                    id,
+                    "Your property has been removed by admin due to policy validation",
+                    NotificationRefType.PROPERTY.name());
         }
 
         for (Image image: deletedProperty.getImages()){
