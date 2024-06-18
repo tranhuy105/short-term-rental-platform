@@ -62,5 +62,9 @@ public class CommonEventListener {
             notificationController.sendNotification(event);
         }
 
+        if (event.getReferencesObjectType().equals("USER")) {
+            notificationController.sendNotification(event);
+        }
+
     }
 }

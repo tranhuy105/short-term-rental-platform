@@ -80,7 +80,7 @@ public class AdminService {
     public void setHostPrivilege(Long roleRequestId, Integer userId, Boolean isConfirm, Integer reviewerId) {
         adminRepository.reviewRoleRequestAndSetPrivilege(roleRequestId, userId, isConfirm, reviewerId);
         if (isConfirm) {
-            eventPublisher.publishSendingNotificationEvent(userId, userId.longValue(), "Congratulations, you are now a host!" , "USER");
+            eventPublisher.publishSendingNotificationEvent(userId, userId.longValue(), "Congratulations, you are now a host, please login again for this to take effect!" , "USER");
         }
     }
 
